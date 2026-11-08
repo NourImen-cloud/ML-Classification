@@ -1,363 +1,431 @@
 'use client';
 
 import { useState } from 'react';
-import { SectionHeader, ThoughtPrompt, Callout, KeyInsight, CompareTable } from '@/components/ui/ConceptCard';
+import {
+  SectionHeader,
+  ThoughtPrompt,
+  CompareTable,
+  Callout,
+  KeyInsight,
+  MathFormula,
+} from '@/components/ui/ConceptCard';
 import { Quiz } from '@/components/ui/Quiz';
-import ClassificationPlayground from '@/components/interactive/ClassificationPlayground';
-
-const algorithms = [
-  {
-    id: 'knn',
-    name: 'K-Nearest Neighbors',
-    idea: 'Classify based on local neighborhood majority vote',
-    boundary: 'Non-linear, follows local cluster contours',
-    goodFor: 'Small datasets, rapid baseline development',
-    formula: 'y_pred = argmax Σ I(y_i = c)',
-  },
-  {
-    id: 'tree',
-    name: 'Decision Tree',
-    idea: 'Hierarchical sequence of optimal binary conditional splits',
-    boundary: 'Orthogonal axis-aligned rectangular regions',
-    goodFor: 'High-stakes domains requiring full human interpretability',
-    formula: 'Gini = 1 - Σ (p_c)²',
-  },
-  {
-    id: 'lr',
-    name: 'Logistic Regression',
-    idea: 'Compute linear weighted score, squash via sigmoid into probability',
-    boundary: 'Linear hyperplane (straight line in 2D)',
-    goodFor: 'Calibrated probability outputs and readable feature weights',
-    formula: 'P(y=1|x) = 1 / (1 + e^-(w·x + b))',
-  },
-  {
-    id: 'nb',
-    name: 'Naive Bayes',
-    idea: 'Multiply conditional feature probabilities assuming feature independence',
-    boundary: 'Linear or quadratic probabilistic surface',
-    goodFor: 'High-dimensional sparse text (word counts)',
-    formula: 'P(c|x) ∝ P(c) · Π P(x_i|c)',
-  },
-  {
-    id: 'svm',
-    name: 'Support Vector Machine',
-    idea: 'Find the maximum-margin hyperplane separating classes with safety cushion',
-    boundary: 'Linear or non-linear via kernel transformations',
-    goodFor: 'Complex, medium-sized data with many features',
-    formula: 'Maximize Margin = 2 / ||w|| subject to y_i(w·x_i + b) ≥ 1',
-  },
-];
-
-const naiveBayesData = {
-  prior: { spam: 0.40, notSpam: 0.60 },
-  likelihood: { word: 'free', spam: 0.60, notSpam: 0.05 },
-};
 
 export default function Part5() {
-  const [selectedAlgo, setSelectedAlgo] = useState<string | null>(null);
-  const [lrWeights] = useState({ w1: 0.8, w2: 0.5, b: -3.0 });
-  const [lrEmail, setLrEmail] = useState({ links: 5, words: 6 });
-  const [lrThreshold, setLrThreshold] = useState(0.5);
+  const [threshold, setThreshold] = useState<number>(0.5);
+  const [testZ, setTestZ] = useState<number>(1.2);
+  const [customLinks, setCustomLinks] = useState<number>(2);
+  const [customWords, setCustomWords] = useState<number>(2);
 
-  const sigmoid = (x: number) => 1 / (1 + Math.exp(-x));
-  const lrScore = lrWeights.w1 * lrEmail.links + lrWeights.w2 * lrEmail.words + lrWeights.b;
-  const lrProb = sigmoid(lrScore);
-  const lrPrediction = lrProb >= lrThreshold ? 'Spam' : 'Not Spam';
+  // Weights from PDF 5.2 worked example: w0 = -3, w1 = 1.2, w2 = 0.9
+  const w0 = -3.0;
+  const w1 = 1.2;
+  const w2 = 0.9;
 
-  // Naive Bayes calculation
-  const nbNumerator = naiveBayesData.likelihood.spam * naiveBayesData.prior.spam;
-  const nbDenom = nbNumerator + naiveBayesData.likelihood.notSpam * naiveBayesData.prior.notSpam;
-  const nbPosterior = nbNumerator / nbDenom;
+  const computedZ = parseFloat((w0 + w1 * customLinks + w2 * customWords).toFixed(2));
+  const sigmoid = (zVal: number) => 1 / (1 + Math.exp(-zVal));
+  const computedProb = parseFloat(sigmoid(computedZ).toFixed(2));
+  const predictedClass = computedProb >= threshold ? 'Spam' : 'Not Spam';
+
+  // Interactive slider probability
+  const sliderProb = parseFloat(sigmoid(testZ).toFixed(2));
+  const sliderClass = sliderProb >= threshold ? 'Spam' : 'Not Spam';
 
   return (
     <div className="max-w-4xl mx-auto px-4 md:px-6 py-6 space-y-10">
       <SectionHeader
         part={5}
-        time="75–85 min"
-        title="More Classification Algorithms"
-        subtitle="Logistic Regression, Naive Bayes, and Support Vector Machines"
+        time="Session 1 · 50–60 min"
+        title="Logistic Regression"
+        subtitle="Linear Scores, the Sigmoid Function & Classification Thresholds"
       />
 
-      {/* 5.1 Logistic Regression */}
+      {/* 5.1 The central idea */}
       <section className="space-y-4">
         <div>
           <span className="font-pixel text-[10px] uppercase font-bold text-[#FF2E7E] tracking-wider block mb-1">
-            SECTION 01
+            SECTION 5.1
           </span>
           <h2 className="text-xl font-extrabold text-[#1A1020]">
-            Logistic Regression: Scores to Probabilities
+            The Central Idea: Predicting Probabilities First
           </h2>
         </div>
 
         <ThoughtPrompt
-          question="Suppose we assign a weight of +0.8 to each hyperlink and +0.5 to each suspicious keyword in an email. How do we convert that raw weighted sum into a valid probability between 0% and 100%?"
-          context="We pass the raw score through the non-linear Sigmoid (logistic) function."
+          question="What if a model outputs P(Spam | x) = 0.87 instead of a blunt 'Spam' label?"
+          context="An estimated 87% probability tells us the model is fairly confident, but not certain. To make an automated system act (e.g. deliver to inbox or dump in spam), we must define an explicit cutoff rule: the classification threshold."
         />
 
-        <div className="rounded-2xl border border-[#F0D6E2] bg-white p-5 shadow-sm space-y-4">
-          <span className="text-xs font-bold text-[#1A1020] uppercase font-pixel tracking-wider block">
-            Interactive Logistic Regression Calculator:
-          </span>
+        <p className="text-sm text-[#4A3B4E] leading-relaxed">
+          Instead of making an immediate hard assignment, <strong>Logistic Regression</strong> first calculates
+          a calibrated confidence score: the conditional probability that an observation belongs to the positive class.
+        </p>
+      </section>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-3">
-              <div>
-                <label className="text-xs text-[#6D5970] block font-medium mb-1">Links: {lrEmail.links}</label>
-                <input
-                  type="range"
-                  min={0}
-                  max={8}
-                  value={lrEmail.links}
-                  onChange={e => setLrEmail(p => ({ ...p, links: +e.target.value }))}
-                  className="w-full"
+      {/* 5.2 How does it work? */}
+      <section className="space-y-4">
+        <div>
+          <span className="font-pixel text-[10px] uppercase font-bold text-[#FF2E7E] tracking-wider block mb-1">
+            SECTION 5.2
+          </span>
+          <h2 className="text-xl font-extrabold text-[#1A1020]">
+            How Does It Work? Linear Score to Sigmoid
+          </h2>
+        </div>
+
+        <p className="text-sm text-[#4A3B4E] leading-relaxed">
+          Despite containing the word &ldquo;regression&rdquo; in its name, Logistic Regression is fundamentally a
+          <strong> classification algorithm</strong>. It computes a linear weighted sum of features, then feeds that
+          score into the non-linear <strong>sigmoid (logistic) activation function</strong>:
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="p-4 rounded-xl bg-white border border-[#F0D6E2] space-y-2">
+            <span className="font-pixel text-[10px] text-[#FF2E7E] font-bold">1. LINEAR SCORE (z)</span>
+            <MathFormula formula="z = w_0 + w_1 x_1 + w_2 x_2 + \dots + w_n x_n" />
+            <p className="text-xs text-[#6D5970]">
+              Weights w quantify feature importance. A positive weight pushes toward Spam; a negative weight pushes away.
+            </p>
+          </div>
+
+          <div className="p-4 rounded-xl bg-white border border-[#F0D6E2] space-y-2">
+            <span className="font-pixel text-[10px] text-[#059669] font-bold">2. SIGMOID MAPPING σ(z)</span>
+            <MathFormula formula="\sigma(z) = \frac{1}{1 + e^{-z}} = P(\text{Spam} \mid x)" />
+            <p className="text-xs text-[#6D5970]">
+              The sigmoid function smoothly compresses any unbounded score z ∈ (-∞, +∞) into a valid probability in (0, 1).
+            </p>
+          </div>
+        </div>
+
+        {/* Sigmoid Properties Interactive Box */}
+        <div className="rounded-2xl border-2 border-[#FFD6E5] bg-white p-5 shadow-sm space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="font-pixel text-xs text-[#FF2E7E] font-bold">
+              FIGURE 3 · THE SIGMOID CURVE &amp; THRESHOLD
+            </span>
+            <span className="font-mono text-xs text-[#6D5970]">Interactive Score Explorer</span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+            {/* SVG Sigmoid Curve */}
+            <div className="p-3 bg-[#FFF9FC] rounded-xl border border-[#F0D6E2]">
+              <svg viewBox="0 0 300 160" className="w-full">
+                {/* Horizontal grid lines */}
+                <line x1="30" y1="20" x2="280" y2="20" stroke="#F0D6E2" strokeDasharray="3 3" />
+                <text x="25" y="24" textAnchor="end" fontSize="9" fill="#6D5970" fontFamily="monospace">1.0</text>
+                
+                <line x1="30" y1="80" x2="280" y2="80" stroke="#F0D6E2" strokeDasharray="3 3" />
+                <text x="25" y="84" textAnchor="end" fontSize="9" fill="#6D5970" fontFamily="monospace">0.5</text>
+                
+                <line x1="30" y1="140" x2="280" y2="140" stroke="#1A1020" strokeWidth="1.2" />
+                <text x="25" y="144" textAnchor="end" fontSize="9" fill="#6D5970" fontFamily="monospace">0.0</text>
+
+                {/* Vertical axis */}
+                <line x1="155" y1="15" x2="155" y2="145" stroke="#1A1020" strokeWidth="1" />
+                <text x="155" y="155" textAnchor="middle" fontSize="9" fill="#6D5970" fontFamily="monospace">z = 0</text>
+
+                {/* Threshold line */}
+                <line
+                  x1="30"
+                  y1={140 - threshold * 120}
+                  x2="280"
+                  y2={140 - threshold * 120}
+                  stroke="#FF2E7E"
+                  strokeWidth="1.5"
+                  strokeDasharray="4 2"
                 />
-              </div>
-              <div>
-                <label className="text-xs text-[#6D5970] block font-medium mb-1">Suspicious Words: {lrEmail.words}</label>
-                <input
-                  type="range"
-                  min={0}
-                  max={8}
-                  value={lrEmail.words}
-                  onChange={e => setLrEmail(p => ({ ...p, words: +e.target.value }))}
-                  className="w-full"
+                <text x="282" y={140 - threshold * 120 + 3} fontSize="9" fill="#FF2E7E" fontWeight="bold">
+                  t = {threshold}
+                </text>
+
+                {/* Sigmoid Curve Path */}
+                <path
+                  d="M 30,138 C 90,137 130,120 155,80 C 180,40 220,23 280,22"
+                  fill="none"
+                  stroke="#1A1020"
+                  strokeWidth="2.5"
                 />
-              </div>
-              <div>
-                <label className="text-xs text-[#6D5970] block font-medium mb-1">
-                  Decision Threshold: {lrThreshold.toFixed(2)}
-                </label>
-                <input
-                  type="range"
-                  min={0.1}
-                  max={0.9}
-                  step={0.05}
-                  value={lrThreshold}
-                  onChange={e => setLrThreshold(+e.target.value)}
-                  className="w-full"
-                />
-                <div className="flex justify-between text-[10px] text-[#6D5970] font-mono mt-0.5">
-                  <span>0.10 (Aggressive Filter)</span>
-                  <span>0.90 (Conservative Filter)</span>
-                </div>
-              </div>
+
+                {/* Current point */}
+                {(() => {
+                  const cx = 155 + (testZ / 6) * 120;
+                  const cy = 140 - sliderProb * 120;
+                  return (
+                    <g>
+                      <circle cx={cx} cy={cy} r={6} fill="#FF2E7E" stroke="#FFFFFF" strokeWidth="2" />
+                      <line x1={cx} y1={cy} x2={cx} y2={140} stroke="#FF2E7E" strokeDasharray="2 2" />
+                    </g>
+                  );
+                })()}
+              </svg>
             </div>
 
-            <div className="space-y-3">
-              <div className="code-block text-xs">
-                Score = (0.8 × {lrEmail.links}) + (0.5 × {lrEmail.words}) - 3.0 = {lrScore.toFixed(2)}
-                <br />
-                P(Spam) = 1 / (1 + e^-({lrScore.toFixed(2)}))
-                <br />
-                P(Spam) = {(lrProb * 100).toFixed(1)}%
-                <br />
-                Threshold = {lrThreshold.toFixed(2)}
+            <div className="space-y-3 text-xs">
+              <div>
+                <div className="flex justify-between items-center mb-1">
+                  <span className="font-bold text-[#1A1020]">Adjust Linear Score z:</span>
+                  <span className="font-mono font-bold text-[#FF2E7E]">{testZ}</span>
+                </div>
+                <input
+                  type="range"
+                  min={-6}
+                  max={6}
+                  step={0.2}
+                  value={testZ}
+                  onChange={(e) => setTestZ(parseFloat(e.target.value))}
+                  className="w-full accent-[#FF2E7E]"
+                />
+                <div className="flex justify-between font-mono text-[10px] text-[#6D5970]">
+                  <span>z = -6 (P ≈ 0)</span>
+                  <span>z = 0 (P = 0.5)</span>
+                  <span>z = +6 (P ≈ 1)</span>
+                </div>
               </div>
 
-              <div className="p-3.5 rounded-xl border border-[#F0D6E2] bg-[#FFF7FA] flex items-center justify-between">
-                <div>
-                  <span className="text-[11px] font-mono text-[#6D5970] block">Predicted Category:</span>
-                  <span className="font-pixel text-sm font-bold text-[#FF2E7E]">
-                    {lrPrediction === 'Spam' ? 'PREDICTED SPAM' : 'PREDICTED NOT SPAM'}
+              <div className="p-3 bg-[#FFF7FA] rounded-xl border border-[#FFB8D2] space-y-1">
+                <div className="flex justify-between">
+                  <span className="text-[#6D5970]">Output Probability P(Spam|x):</span>
+                  <span className="font-mono font-bold text-[#96003B]">{sliderProb}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#6D5970]">Current Threshold:</span>
+                  <span className="font-mono font-bold text-[#1A1020]">{threshold}</span>
+                </div>
+                <div className="flex justify-between items-center pt-1 border-t border-[#FFD6E5]">
+                  <span className="font-bold text-[#1A1020]">Predicted Decision:</span>
+                  <span
+                    className={`px-2 py-0.5 rounded-full font-mono font-bold text-xs ${
+                      sliderClass === 'Spam'
+                        ? 'bg-[#FFE4EF] text-[#FF2E7E]'
+                        : 'bg-[#ECFDF5] text-[#059669]'
+                    }`}
+                  >
+                    {sliderClass}
                   </span>
                 </div>
-                <span className="font-mono text-sm font-bold text-[#1A1020]">
-                  {(lrProb * 100).toFixed(1)}%
-                </span>
               </div>
             </div>
           </div>
         </div>
 
-        <KeyInsight>
-          The decision threshold (default 0.50) is a tunable engineering choice. Increasing the threshold to 0.80 requires stronger evidence before flagging an email, reducing false alarms at the cost of letting more spam slip through.
-        </KeyInsight>
-      </section>
-
-      {/* 5.2 Naive Bayes */}
-      <section className="space-y-4">
-        <div>
-          <span className="font-pixel text-[10px] uppercase font-bold text-[#FF2E7E] tracking-wider block mb-1">
-            SECTION 02
-          </span>
-          <h2 className="text-xl font-extrabold text-[#1A1020]">
-            Naive Bayes: Probabilities and Cumulative Evidence
-          </h2>
-        </div>
-
-        <ThoughtPrompt
-          question="Historically, 40% of all emails are spam. 60% of spam emails contain the word 'free', but only 5% of legitimate emails do. If an incoming email contains 'free', what is the updated probability that it is spam?"
-          context="Bayes' Theorem converts observation frequencies into posterior belief."
-        />
-
+        {/* Worked Example from PDF */}
         <div className="rounded-2xl border border-[#F0D6E2] bg-white p-5 shadow-sm space-y-3">
+          <span className="font-bold text-sm text-[#1A1020] block">
+            Worked Example: Illustrative Learned Weights
+          </span>
+          <p className="text-xs text-[#4A3B4E]">
+            Suppose training generated the parameters: <code className="bg-[#FFF0F6] px-1 rounded font-bold text-[#96003B]">w₀ = -3.0</code> (bias),{' '}
+            <code className="bg-[#FFF0F6] px-1 rounded font-bold text-[#96003B]">w₁ = 1.2</code> (per link), and{' '}
+            <code className="bg-[#FFF0F6] px-1 rounded font-bold text-[#96003B]">w₂ = 0.9</code> (per suspicious word).
+          </p>
+
           <div className="overflow-x-auto rounded-xl border border-[#F0D6E2]">
-            <table className="data-table min-w-full text-xs">
-              <thead>
-                <tr><th>Probability Parameter</th><th>Value</th><th>Interpretation</th></tr>
+            <table className="w-full text-xs text-left">
+              <thead className="bg-[#FFE4EF] text-[#96003B] font-mono">
+                <tr>
+                  <th className="p-2.5">Email</th>
+                  <th className="p-2.5">Links</th>
+                  <th className="p-2.5">Susp. Words</th>
+                  <th className="p-2.5">Linear Score z</th>
+                  <th className="p-2.5">Probability P(Spam | x)</th>
+                </tr>
               </thead>
-              <tbody>
-                <tr><td>P(Spam)</td><td className="font-mono">0.40</td><td>Prior probability before reading the email</td></tr>
-                <tr><td>P(Not Spam)</td><td className="font-mono">0.60</td><td>Prior probability of legitimate email</td></tr>
-                <tr><td>P(&quot;free&quot; | Spam)</td><td className="font-mono">0.60</td><td>Likelihood of word in spam</td></tr>
-                <tr><td>P(&quot;free&quot; | Not Spam)</td><td className="font-mono">0.05</td><td>Likelihood of word in legitimate email</td></tr>
-                <tr className="highlight">
-                  <td className="font-bold">P(Spam | &quot;free&quot;)</td>
-                  <td className="font-mono font-bold text-[#FF2E7E]">{(nbPosterior * 100).toFixed(1)}%</td>
-                  <td className="font-semibold text-[#FF2E7E]">Posterior probability after seeing &quot;free&quot;</td>
+              <tbody className="divide-y divide-[#F7EAF0]">
+                <tr>
+                  <td className="p-2.5 font-bold font-mono">Email 1</td>
+                  <td className="p-2.5 font-mono">2</td>
+                  <td className="p-2.5 font-mono">2</td>
+                  <td className="p-2.5 font-mono">-3 + 1.2(2) + 0.9(2) = 1.2</td>
+                  <td className="p-2.5 font-mono font-bold text-[#FF2E7E]">σ(1.2) ≈ 0.77 (77%)</td>
+                </tr>
+                <tr>
+                  <td className="p-2.5 font-bold font-mono">Email 2</td>
+                  <td className="p-2.5 font-mono">0</td>
+                  <td className="p-2.5 font-mono">1</td>
+                  <td className="p-2.5 font-mono">-3 + 1.2(0) + 0.9(1) = -2.1</td>
+                  <td className="p-2.5 font-mono font-bold text-[#059669]">σ(-2.1) ≈ 0.11 (11%)</td>
                 </tr>
               </tbody>
             </table>
           </div>
 
-          <div className="p-3.5 rounded-xl border border-[#A7F3D0] bg-[#ECFDF5] text-xs text-[#065F46] leading-relaxed">
-            Observing the single keyword &quot;free&quot; surges the probability of spam from an initial 40% baseline up to <strong>88.9%</strong>. For multiple words, Naive Bayes multiplies the individual likelihoods together.
-          </div>
+          <Callout type="tip" title="Improvement Added: Why It Is a Linear Classifier">
+            With default threshold 0.5, the model predicts Spam exactly when <code className="bg-white px-1 border rounded">z &ge; 0</code>.
+            Because <code className="bg-white px-1 border rounded">w₀ + w₁x₁ + w₂x₂ = 0</code> defines a straight line in 2D space
+            (and a flat hyperplane in higher dimensions), the decision boundary is strictly linear.
+          </Callout>
         </div>
-
-        <Callout type="warning" title="Why is it Called &quot;Naive&quot;?">
-          The algorithm naively assumes all features are conditionally independent given the class label. In reality, words like &quot;free&quot; and &quot;win&quot; frequently correlate. Despite this unrealistic independence assumption, Naive Bayes performs surprisingly well and trains nearly instantaneously on text collections.
-        </Callout>
       </section>
 
-      {/* 5.3 Support Vector Machines */}
+      {/* 5.3 From probability to class */}
       <section className="space-y-4">
         <div>
           <span className="font-pixel text-[10px] uppercase font-bold text-[#FF2E7E] tracking-wider block mb-1">
-            SECTION 03
+            SECTION 5.3
           </span>
           <h2 className="text-xl font-extrabold text-[#1A1020]">
-            Support Vector Machines: Maximizing the Safety Margin
+            From Probability to Class: The Decision Rule
           </h2>
         </div>
 
-        <div className="rounded-2xl border border-[#F0D6E2] bg-white p-5 shadow-sm space-y-3">
-          <p className="text-xs text-[#6D5970] leading-relaxed">
-            When two classes are linearly separable, infinitely many valid dividing lines can be drawn. Support Vector Machines find the single unique hyperplane that maximizes the geometric distance (margin) between the boundary and the closest training points on either side:
-          </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+          <div className="p-4 rounded-xl bg-white border border-[#F0D6E2] space-y-1.5">
+            <span className="font-bold text-[#FF2E7E] block">Threshold = 0.5 (Standard Cutoff)</span>
+            <p className="text-[#4A3B4E]">
+              Email has P(Spam | x) = 0.78.
+              <br />
+              0.78 &ge; 0.5 → <strong className="text-[#FF2E7E]">Predicted Class: Spam</strong>
+            </p>
+          </div>
 
-          <div className="p-4 bg-[#FFF9FC] rounded-xl border border-[#F0D6E2] flex flex-col items-center">
-            <svg viewBox="0 0 320 160" className="w-full max-w-sm select-none">
-              <rect width={320} height={160} fill="#FFFFFF" rx={8} />
-              {/* Margin corridor */}
-              <rect x={120} y={0} width={80} height={160} fill="#FFE4EF" opacity={0.5} />
-              {/* SVM Hyperplane */}
-              <line x1={160} y1={10} x2={160} y2={150} stroke="#FF2E7E" strokeWidth={2.5} />
-              {/* Margin boundaries */}
-              <line x1={120} y1={10} x2={120} y2={150} stroke="#FF2E7E" strokeWidth={1} strokeDasharray="4,4" />
-              <line x1={200} y1={10} x2={200} y2={150} stroke="#FF2E7E" strokeWidth={1} strokeDasharray="4,4" />
-              {/* Not Spam Points */}
-              {[[50, 40], [70, 80], [60, 120], [90, 50]].map(([x, y], i) => (
-                <circle key={i} cx={x} cy={y} r={5} fill="#10B981" />
-              ))}
-              {/* Spam Points */}
-              {[[240, 50], [260, 90], [230, 130], [250, 70]].map(([x, y], i) => (
-                <circle key={i} cx={x} cy={y} r={5} fill="#FF2E7E" />
-              ))}
-              {/* Support Vectors */}
-              <circle cx={90} cy={80} r={8} fill="none" stroke="#FF2E7E" strokeWidth={2} />
-              <circle cx={90} cy={80} r={5} fill="#10B981" />
-              <circle cx={220} cy={80} r={8} fill="none" stroke="#FF2E7E" strokeWidth={2} />
-              <circle cx={220} cy={80} r={5} fill="#FF2E7E" />
-              {/* Text */}
-              <text x={160} y={155} fill="#FF2E7E" fontSize={9} textAnchor="middle" fontWeight="bold">Hyperplane</text>
-              <text x={160} y={20} fill="#FF2E7E" fontSize={9} textAnchor="middle">← Margin Corridor →</text>
-            </svg>
-            <p className="text-[11px] text-[#6D5970] mt-2 font-mono">
-              Encircled points are Support Vectors — they alone dictate the boundary location.
+          <div className="p-4 rounded-xl bg-white border border-[#F0D6E2] space-y-1.5">
+            <span className="font-bold text-[#059669] block">Threshold = 0.9 (Conservative Cutoff)</span>
+            <p className="text-[#4A3B4E]">
+              Same email has P(Spam | x) = 0.78.
+              <br />
+              0.78 &lt; 0.9 → <strong className="text-[#059669]">Predicted Class: Not Spam</strong>
             </p>
           </div>
         </div>
+
+        <Callout type="danger" title="Common Misconception: Score vs Decision Rule">
+          Notice what just happened: <strong>the model’s internal score did not change at all</strong> (it remained 0.78)!
+          Only our external decision rule changed. The predicted probability and the predicted class are
+          fundamentally two separate concepts.
+        </Callout>
       </section>
 
-      {/* 5.4 Multi-Algorithm Playground */}
+      {/* 5.4 Quick experiment */}
       <section className="space-y-4">
         <div>
           <span className="font-pixel text-[10px] uppercase font-bold text-[#FF2E7E] tracking-wider block mb-1">
-            SECTION 04
+            SECTION 5.4 · ACTIVITY
           </span>
           <h2 className="text-xl font-extrabold text-[#1A1020]">
-            Comparing All Classifiers Side-by-Side
+            Interactive Threshold Experiment
           </h2>
         </div>
 
-        <div className="space-y-2">
-          {algorithms.map(algo => (
-            <div
-              key={algo.id}
-              className="rounded-2xl border border-[#F0D6E2] bg-white p-4 shadow-sm space-y-2"
-            >
-              <div
-                onClick={() => setSelectedAlgo(selectedAlgo === algo.id ? null : algo.id)}
-                className="flex items-center justify-between cursor-pointer"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="font-pixel text-[10px] px-2 py-0.5 rounded bg-[#FFF0F6] text-[#FF2E7E] font-bold">
-                    {algo.name}
-                  </span>
-                  <span className="text-xs text-[#6D5970] hidden sm:inline">{algo.idea}</span>
-                </div>
-                <span className="text-xs font-bold text-[#FF2E7E]">
-                  {selectedAlgo === algo.id ? '▲ Collapse' : '▼ Details'}
+        <div className="rounded-2xl border-2 border-[#FFD6E5] bg-white p-5 shadow-sm space-y-4">
+          <p className="text-xs text-[#4A3B4E]">
+            Adjust the threshold slider below. Observe how the same calculated email probability flips between
+            Spam and Not Spam as you demand greater or lesser certainty:
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-[#1A1020] block">Set Threshold (t): {threshold}</label>
+              <input
+                type="range"
+                min={0.1}
+                max={0.9}
+                step={0.05}
+                value={threshold}
+                onChange={(e) => setThreshold(parseFloat(e.target.value))}
+                className="w-full accent-[#FF2E7E]"
+              />
+              <div className="flex justify-between font-mono text-[10px] text-[#6D5970]">
+                <span>0.1 (Aggressive)</span>
+                <span>0.5</span>
+                <span>0.9 (Strict)</span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-[#1A1020] block">Test Email Links: {customLinks}</label>
+              <input
+                type="range"
+                min={0}
+                max={5}
+                value={customLinks}
+                onChange={(e) => setCustomLinks(parseInt(e.target.value, 10))}
+                className="w-full accent-[#FF2E7E]"
+              />
+              <label className="text-xs font-bold text-[#1A1020] block">Test Email Words: {customWords}</label>
+              <input
+                type="range"
+                min={0}
+                max={5}
+                value={customWords}
+                onChange={(e) => setCustomWords(parseInt(e.target.value, 10))}
+                className="w-full accent-[#FF2E7E]"
+              />
+            </div>
+
+            <div className="p-3.5 bg-[#FFF7FA] rounded-xl border border-[#FFB8D2] text-xs space-y-1">
+              <div>z = -3 + 1.2({customLinks}) + 0.9({customWords}) = <strong>{computedZ}</strong></div>
+              <div>P(Spam | x) = σ({computedZ}) = <strong className="text-[#FF2E7E]">{computedProb}</strong></div>
+              <div className="pt-1 border-t border-[#FFD6E5] flex justify-between items-center">
+                <span>Decision:</span>
+                <span
+                  className={`font-mono font-bold px-2 py-0.5 rounded text-xs ${
+                    predictedClass === 'Spam' ? 'bg-[#FFE4EF] text-[#FF2E7E]' : 'bg-[#ECFDF5] text-[#059669]'
+                  }`}
+                >
+                  {predictedClass}
                 </span>
               </div>
-
-              {selectedAlgo === algo.id && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 pt-2 border-t border-[#F7EAF0] text-xs">
-                  <div>
-                    <span className="text-[10px] text-[#6D5970] uppercase font-bold block">Decision Boundary:</span>
-                    <span className="font-semibold text-[#1A1020]">{algo.boundary}</span>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-[#6D5970] uppercase font-bold block">Best Suited For:</span>
-                    <span className="font-semibold text-[#1A1020]">{algo.goodFor}</span>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-[#6D5970] uppercase font-bold block">Formulation:</span>
-                    <span className="font-mono text-[#FF2E7E] text-[11px]">{algo.formula}</span>
-                  </div>
-                </div>
-              )}
             </div>
-          ))}
-        </div>
-
-        {/* Embedded Playground */}
-        <div className="pt-4">
-          <ClassificationPlayground />
+          </div>
         </div>
       </section>
 
-      {/* Quiz */}
-      <section className="pt-4 border-t border-[#F0D6E2]">
-        <Quiz
-          partNumber={5}
-          questions={[
-            {
-              question: 'A trained logistic regression model outputs 0.87 for a specific email. What does this scalar represent?',
-              options: [
-                'The email contains exactly 87 suspicious keywords',
-                'The model estimates an 87% posterior probability that the email is spam',
-                'The model has achieved an overall 87% accuracy across the evaluation test set',
-                'The email is 87% Euclidean distance away from the nearest non-spam point',
-              ],
-              correctIndex: 1,
-              explanation: 'The output of the sigmoid function in binary logistic regression represents the modeled posterior probability of belonging to the positive class (Spam).',
-            },
-            {
-              question: 'In a Support Vector Machine, what defines a "Support Vector"?',
-              options: [
-                'Every sample present in the training dataset',
-                'The training samples lying furthest from the decision boundary',
-                'The critical training samples closest to the decision boundary that dictate the maximum-margin hyperplane',
-                'The unseen queries evaluated at test time',
-              ],
-              correctIndex: 2,
-              explanation: 'Support vectors are the subset of training points that lie directly on the margin boundary. Moving or removing any other training points has zero effect on the learned boundary.',
-            },
-          ]}
-        />
-      </section>
+      {/* Stage 2 Checkpoint */}
+      <div className="rounded-2xl border-2 border-[#10B981] bg-[#ECFDF5] p-5 shadow-sm space-y-3">
+        <span className="font-pixel text-xs text-[#059669] font-bold uppercase tracking-wider block">
+          STAGE 2 CHECKPOINT · HOW CLASSIFIERS DECIDE
+        </span>
+        <h3 className="font-extrabold text-base text-[#1A1020]">
+          Stage Question: &ldquo;Why could a new observation receive a different prediction when we change K, even though the training data has not changed?&rdquo;
+        </h3>
+        <p className="text-xs md:text-sm text-[#4A3B4E] leading-relaxed">
+          Because changing K alters the <em>scale of local consensus</em>! Small K (e.g. K=1) consults only the single nearest point,
+          which might be an unrepresentative outlier or noise. Increasing K widens the neighborhood window to incorporate more surrounding
+          evidence, allowing the consensus majority to outvote local noise.
+        </p>
+      </div>
+
+      <Quiz
+        partNumber={5}
+        questions={[
+          {
+            question: 'What is the role of the sigmoid activation function in logistic regression?',
+            options: [
+              'It transforms any real-valued linear score z into a valid probability in the range (0, 1).',
+              'It calculates the Euclidean distance between training points.',
+              'It splits features using Gini impurity.',
+              'It eliminates the need to train weights.',
+            ],
+            correctIndex: 0,
+            explanation:
+              'The sigmoid function sigma(z) = 1 / (1 + e^-z) smoothly compresses negative and positive numbers into calibrated probabilities.',
+          },
+          {
+            question: 'If an email has P(Spam | x) = 0.72 and we increase the classification threshold from 0.5 to 0.8, what happens to the prediction?',
+            options: [
+              'It flips from Spam to Not Spam.',
+              'It stays Spam.',
+              'The calculated probability drops to 0.40.',
+              'The model retraining is automatically triggered.',
+            ],
+            correctIndex: 0,
+            explanation:
+              'At threshold 0.5, 0.72 >= 0.5 -> Spam. At threshold 0.8, 0.72 < 0.8 -> Not Spam. The probability did not change; only the cutoff rule changed.',
+          },
+          {
+            question: 'Why does Logistic Regression produce a linear decision boundary?',
+            options: [
+              'Because with threshold 0.5, the decision boundary occurs exactly where z = 0, which is a linear equation in the features.',
+              'Because features must always be straight lines.',
+              'Because logistic regression only supports 1 feature.',
+              'Because the sigmoid curve is a straight line.',
+            ],
+            correctIndex: 0,
+            explanation:
+              'At threshold 0.5, P = 0.5 occurs when linear score z = w0 + w1 x1 + w2 x2 = 0, which defines a flat hyperplane boundary in feature space.',
+          },
+        ]}
+      />
     </div>
   );
 }

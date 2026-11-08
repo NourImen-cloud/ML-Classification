@@ -1,282 +1,393 @@
 'use client';
 
 import { useState } from 'react';
-import { SectionHeader, ThoughtPrompt, Callout, KeyInsight, CompareTable } from '@/components/ui/ConceptCard';
+import {
+  SectionHeader,
+  ThoughtPrompt,
+  CompareTable,
+  Callout,
+  KeyInsight,
+} from '@/components/ui/ConceptCard';
 import { Quiz } from '@/components/ui/Quiz';
-import { overfittingData, treeOverfitting } from '@/lib/evaluation';
+import { overfittingCurveData } from '@/lib/evaluation';
 
-function AccuracyBars({
-  trainAcc,
-  testAcc,
-  label,
-  status,
-}: {
-  trainAcc: number;
-  testAcc: number;
-  label: string;
-  status: string;
-}) {
-  const gap = Math.abs(trainAcc - testAcc);
-  const statusLabels = {
-    overfit: { color: '#DC2626', bg: '#FEF2F2', border: '#FECACA', text: 'OVERFITTING' },
-    good: { color: '#059669', bg: '#ECFDF5', border: '#A7F3D0', text: 'BALANCED' },
-    underfit: { color: '#D97706', bg: '#FFFBEB', border: '#FDE68A', text: 'UNDERFITTING' },
-  };
-  const config = statusLabels[status as keyof typeof statusLabels] ?? statusLabels.good;
-
-  return (
-    <div className="rounded-2xl border p-4 bg-white shadow-sm space-y-2.5" style={{ borderColor: config.border }}>
-      <div className="flex items-center justify-between">
-        <span className="font-bold text-xs text-[#1A1020]">{label}</span>
-        <span
-          className="font-pixel text-[9px] px-2 py-0.5 rounded-full font-bold"
-          style={{ background: config.bg, color: config.color }}
-        >
-          {config.text}
-        </span>
-      </div>
-
-      <div className="space-y-1.5 font-mono text-xs">
-        <div>
-          <div className="flex justify-between text-[11px] mb-0.5">
-            <span className="text-[#6D5970]">Training Accuracy:</span>
-            <span className="font-bold text-[#1A1020]">{(trainAcc * 100).toFixed(0)}%</span>
-          </div>
-          <div className="h-2 bg-[#FFF0F6] rounded-full overflow-hidden">
-            <div className="h-full bg-[#FF2E7E] rounded-full" style={{ width: `${trainAcc * 100}%` }} />
-          </div>
-        </div>
-
-        <div>
-          <div className="flex justify-between text-[11px] mb-0.5">
-            <span className="text-[#6D5970]">Test Accuracy:</span>
-            <span className="font-bold text-[#1A1020]">{(testAcc * 100).toFixed(0)}%</span>
-          </div>
-          <div className="h-2 bg-[#FFF0F6] rounded-full overflow-hidden">
-            <div className="h-full bg-[#1A1020] rounded-full" style={{ width: `${testAcc * 100}%` }} />
-          </div>
-        </div>
-      </div>
-
-      {gap > 0.05 && (
-        <div className="text-[11px] font-mono font-bold flex justify-between pt-1 border-t border-[#F7EAF0]" style={{ color: config.color }}>
-          <span>Generalization Gap:</span>
-          <span>{(gap * 100).toFixed(0)}%</span>
-        </div>
-      )}
-    </div>
-  );
-}
+const fitCases = [
+  ['Underfitting (High Bias)', 'Model is too simplistic to capture real underlying patterns', 'Poor on both train and test', 'Straight line on non-linear data; Tree depth=1; K=50'],
+  ['Good Fit (Balanced)', 'Captures robust, generalizable signals while ignoring noise', 'Good on both; small gap between train and test', 'Tree depth=3; K=5; Regularized Logistic Regression'],
+  ['Overfitting (High Variance)', 'Memorizes training points, quirks, and accidental noise', 'Near 100% on training, poor on unseen test data', 'Tree depth=15; K=1 (memorizes noise point E10)'],
+];
 
 export default function Part7() {
-  const [selectedModel, setSelectedModel] = useState<string | null>(null);
+  const [selectedComplexity, setSelectedComplexity] = useState<number>(4);
+  const [modelType, setModelType] = useState<'knn' | 'tree'>('knn');
+  const [treeDepth, setTreeDepth] = useState<number>(3);
+  const [knnK, setKnnK] = useState<number>(5);
+
+  const currentPoint = overfittingCurveData.find((p) => p.complexity === selectedComplexity) ?? overfittingCurveData[2];
+
+  // Simulating train vs test accuracy based on slider
+  const getAccuracies = () => {
+    if (modelType === 'knn') {
+      if (knnK === 1) return { train: 100, test: 75, gap: 25, status: 'Overfitting' };
+      if (knnK === 3) return { train: 92, test: 88, gap: 4, status: 'Good Fit' };
+      if (knnK === 5) return { train: 89, test: 89, gap: 0, status: 'Optimal' };
+      if (knnK >= 9) return { train: 78, test: 77, gap: 1, status: 'Underfitting' };
+    } else {
+      if (treeDepth === 1) return { train: 80, test: 78, gap: 2, status: 'Underfitting' };
+      if (treeDepth <= 3) return { train: 90, test: 88, gap: 2, status: 'Good Fit' };
+      return { train: 100, test: 70, gap: 30, status: 'Overfitting' };
+    }
+    return { train: 88, test: 86, gap: 2, status: 'Good Fit' };
+  };
+
+  const accs = getAccuracies();
 
   return (
     <div className="max-w-4xl mx-auto px-4 md:px-6 py-6 space-y-10">
       <SectionHeader
         part={7}
-        time="103–110 min"
+        time="Session 2 · 10–20 min"
         title="Overfitting and Generalization"
-        subtitle="Why Perfect Training Accuracy is a Critical Warning Sign"
+        subtitle="Memorization vs. Learning, Complexity Curves & Mitigation"
       />
 
-      {/* 7.1 The Memorization Problem */}
+      {/* 7.1 A human analogy */}
       <section className="space-y-4">
         <div>
           <span className="font-pixel text-[10px] uppercase font-bold text-[#FF2E7E] tracking-wider block mb-1">
-            SECTION 01
+            SECTION 7.1
           </span>
           <h2 className="text-xl font-extrabold text-[#1A1020]">
-            The Student Exam Analogy
+            A Human Analogy: Rote Memorization
           </h2>
         </div>
 
-        <ThoughtPrompt
-          question="A student memorizes the exact answer key for last year's exam without understanding the underlying material. When given a newly written exam with different questions, what happens?"
-          context="They fail the new exam because they memorized specifics rather than learning generalizable principles."
-        />
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          {[
-            {
-              term: 'Underfitting',
-              badge: 'HIGH BIAS',
-              desc: 'The model is too rigid to capture the true underlying data patterns. Performance is poor on both training and test data.',
-              status: 'underfit',
-            },
-            {
-              term: 'Generalization',
-              badge: 'OPTIMAL FIT',
-              desc: 'The model learns the broad structural patterns without fitting random noise. Training and test accuracies are closely matched.',
-              status: 'good',
-            },
-            {
-              term: 'Overfitting',
-              badge: 'HIGH VARIANCE',
-              desc: 'The model memorizes noise and sample quirks. Training accuracy approaches 100%, but accuracy collapses on unseen test data.',
-              status: 'overfit',
-            },
-          ].map(c => (
-            <div key={c.term} className="p-4 rounded-2xl border border-[#F0D6E2] bg-white shadow-sm space-y-1.5">
-              <span className="font-pixel text-[9px] px-2 py-0.5 rounded-full bg-[#FFE4EF] text-[#FF2E7E] font-bold">
-                {c.badge}
-              </span>
-              <h4 className="font-bold text-sm text-[#1A1020]">{c.term}</h4>
-              <p className="text-xs text-[#6D5970] leading-relaxed">{c.desc}</p>
-            </div>
-          ))}
+        <div className="rounded-2xl border-2 border-[#FFB8D2] bg-[#FFF7FA] p-5 shadow-sm space-y-2">
+          <div className="flex items-center gap-2">
+            <span className="font-pixel text-[10px] px-2.5 py-0.5 rounded-full bg-[#FF2E7E] text-white font-bold">
+              ASK THE STUDENTS
+            </span>
+            <span className="font-bold text-sm text-[#1A1020]">Recall the 99% vs 65% Dilemma</span>
+          </div>
+          <p className="text-sm text-[#2D1F33]">
+            &ldquo;A student memorizes the exact numbers of homework answers by heart. When the teacher slightly
+            modifies the problem constants on the final exam, the student completely fails. Did they learn the concept?
+            Not at all. A machine learning model behaves in the exact same manner when overfit.&rdquo;
+          </p>
         </div>
       </section>
 
-      {/* 7.2 Train/Test Split Gap Analysis */}
+      {/* 7.2 What is overfitting? */}
       <section className="space-y-4">
         <div>
           <span className="font-pixel text-[10px] uppercase font-bold text-[#FF2E7E] tracking-wider block mb-1">
-            SECTION 02
+            SECTION 7.2
           </span>
           <h2 className="text-xl font-extrabold text-[#1A1020]">
-            Evaluating Generalization: The Train / Test Split
+            What is Overfitting? The Complexity Curve (Figure 4)
           </h2>
         </div>
 
-        <Callout type="info" title="The Golden Rule of ML">
-          Never evaluate a model exclusively on the data it studied. Split data into a <strong>training partition</strong> (~70-80%) and an untouched <strong>held-out test partition</strong> (~20-30%) to simulate real-world deployment.
+        <p className="text-sm text-[#4A3B4E] leading-relaxed">
+          <strong>Overfitting</strong> happens when a model fits the training data too closely, incorporating noise
+          and accidental sample idiosyncrasies, and consequently performs poorly on new, unseen observations.
+          It has learned details that do not generalize.
+        </p>
+
+        <CompareTable
+          headers={['Regime', 'Description', 'Train vs. Test Performance', 'Spam Classifier Example']}
+          rows={fitCases}
+          highlight={[1]}
+        />
+
+        {/* Figure 4: Interactive Complexity vs Error Curve */}
+        <div className="rounded-2xl border-2 border-[#FFD6E5] bg-white p-5 shadow-sm space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="font-pixel text-xs text-[#FF2E7E] font-bold">
+              FIGURE 4 · THE GENERALIZATION GAP CURVE
+            </span>
+            <span className="text-xs font-mono text-[#6D5970]">Error vs Model Complexity</span>
+          </div>
+
+          <div className="p-3 bg-[#FFF9FC] rounded-xl border border-[#F0D6E2]">
+            <svg viewBox="0 0 400 180" className="w-full">
+              {/* Axes */}
+              <line x1="40" y1="150" x2="380" y2="150" stroke="#1A1020" strokeWidth="1.5" />
+              <line x1="40" y1="150" x2="40" y2="20" stroke="#1A1020" strokeWidth="1.5" />
+
+              {/* Labels */}
+              <text x="210" y="170" textAnchor="middle" fontSize="10" fill="#1A1020" fontWeight="bold">
+                Model Complexity (Smaller K, Deeper Tree →)
+              </text>
+              <text x="15" y="85" textAnchor="middle" fontSize="10" fill="#1A1020" fontWeight="bold" transform="rotate(-90, 15, 85)">
+                Error Rate
+              </text>
+
+              {/* Background regions */}
+              <rect x="40" y="20" width="100" height="130" fill="#FEF3C7" opacity="0.3" />
+              <text x="90" y="35" textAnchor="middle" fontSize="9" fill="#92400E" fontWeight="bold">Underfitting</text>
+
+              <rect x="140" y="20" width="100" height="130" fill="#DCFCE7" opacity="0.3" />
+              <text x="190" y="35" textAnchor="middle" fontSize="9" fill="#166534" fontWeight="bold">Good Fit</text>
+
+              <rect x="240" y="20" width="140" height="130" fill="#FEE2E2" opacity="0.3" />
+              <text x="310" y="35" textAnchor="middle" fontSize="9" fill="#991B1B" fontWeight="bold">Overfitting</text>
+
+              {/* Training Error Curve (falling) */}
+              <path
+                d="M 40,130 Q 150,110 240,40 T 380,20"
+                fill="none"
+                stroke="#10B981"
+                strokeWidth="2.5"
+              />
+              <text x="375" y="15" textAnchor="end" fontSize="9" fill="#10B981" fontWeight="bold">
+                — Training Error
+              </text>
+
+              {/* Test / Validation Error Curve (U-shaped) */}
+              <path
+                d="M 40,140 Q 140,80 190,75 Q 260,85 380,145"
+                fill="none"
+                stroke="#FF2E7E"
+                strokeWidth="2.5"
+              />
+              <text x="375" y="140" textAnchor="end" fontSize="9" fill="#FF2E7E" fontWeight="bold">
+                — Test / Val Error
+              </text>
+
+              {/* Generalization Gap Arrow at high complexity */}
+              <line x1="330" y1="25" x2="330" y2="120" stroke="#DC2626" strokeWidth="1.5" strokeDasharray="3 3" />
+              <text x="335" y="70" fontSize="9" fill="#DC2626" fontWeight="bold">
+                Generalization Gap!
+              </text>
+            </svg>
+          </div>
+
+          <Callout type="warning" title="Teacher Note: Diagnostic Rule">
+            Typical causes: a model that is excessively complex for the sample size, noisy training labels,
+            and non-representative training data. <strong>The diagnostic is always the same: compare training
+            performance directly with validation/test performance. The divergence is the warning sign.</strong>
+          </Callout>
+        </div>
+      </section>
+
+      {/* 7.3 Interactive experiment: Break the model */}
+      <section className="space-y-4">
+        <div>
+          <span className="font-pixel text-[10px] uppercase font-bold text-[#FF2E7E] tracking-wider block mb-1">
+            SECTION 7.3 · ACTIVITY
+          </span>
+          <h2 className="text-xl font-extrabold text-[#1A1020]">
+            Interactive Experiment: &ldquo;Break the Model&rdquo;
+          </h2>
+        </div>
+
+        <div className="rounded-2xl border-2 border-[#FFD6E5] bg-white p-5 shadow-sm space-y-4">
+          <p className="text-xs text-[#4A3B4E]">
+            Manipulate the complexity slider to watch how training accuracy diverges from test accuracy:
+          </p>
+
+          <div className="flex gap-2">
+            <button
+              onClick={() => setModelType('knn')}
+              className={`px-4 py-1.5 rounded-xl font-bold text-xs ${
+                modelType === 'knn' ? 'bg-[#FF2E7E] text-white' : 'bg-white border text-[#6D5970]'
+              }`}
+            >
+              Test KNN (Neighbors K)
+            </button>
+            <button
+              onClick={() => setModelType('tree')}
+              className={`px-4 py-1.5 rounded-xl font-bold text-xs ${
+                modelType === 'tree' ? 'bg-[#FF2E7E] text-white' : 'bg-white border text-[#6D5970]'
+              }`}
+            >
+              Test Decision Tree (Depth)
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center pt-2">
+            <div className="space-y-3">
+              {modelType === 'knn' ? (
+                <div>
+                  <div className="flex justify-between items-center mb-1 text-xs">
+                    <span className="font-bold text-[#1A1020]">KNN Neighbors (K):</span>
+                    <span className="font-mono font-bold text-[#FF2E7E]">K = {knnK}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={1}
+                    max={11}
+                    step={2}
+                    value={knnK}
+                    onChange={(e) => setKnnK(parseInt(e.target.value, 10))}
+                    className="w-full accent-[#FF2E7E]"
+                  />
+                  <div className="flex justify-between font-mono text-[10px] text-[#6D5970]">
+                    <span>K=1 (Ultra Complex / Overfit)</span>
+                    <span>K=5 (Balanced)</span>
+                    <span>K=11 (Oversmoothed)</span>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <div className="flex justify-between items-center mb-1 text-xs">
+                    <span className="font-bold text-[#1A1020]">Tree Max Depth:</span>
+                    <span className="font-mono font-bold text-[#FF2E7E]">Depth = {treeDepth}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={1}
+                    max={6}
+                    value={treeDepth}
+                    onChange={(e) => setTreeDepth(parseInt(e.target.value, 10))}
+                    className="w-full accent-[#FF2E7E]"
+                  />
+                  <div className="flex justify-between font-mono text-[10px] text-[#6D5970]">
+                    <span>Depth=1 (Stump)</span>
+                    <span>Depth=3 (Optimal)</span>
+                    <span>Depth=6 (Deep/Memorizes)</span>
+                  </div>
+                </div>
+              )}
+
+              <div className="p-3 bg-[#FFF7FA] rounded-xl border border-[#FFB8D2] text-xs space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-[#1A1020]">Diagnosis:</span>
+                  <span
+                    className={`font-mono font-bold px-2 py-0.5 rounded text-xs ${
+                      accs.status === 'Overfitting'
+                        ? 'bg-[#FEE2E2] text-[#DC2626]'
+                        : accs.status === 'Underfitting'
+                        ? 'bg-[#FEF3C7] text-[#D97706]'
+                        : 'bg-[#DCFCE7] text-[#059669]'
+                    }`}
+                  >
+                    {accs.status.toUpperCase()}
+                  </span>
+                </div>
+                <p className="text-[11px] text-[#6D5970]">
+                  {accs.status === 'Overfitting' && 'Training accuracy is deceptively high, but test accuracy dropped! The model memorized noise point E10.'}
+                  {accs.status === 'Underfitting' && 'Model is too rigid to recognize distinct clusters.'}
+                  {accs.status === 'Good Fit' && 'Small generalization gap; robust boundary.'}
+                </p>
+              </div>
+            </div>
+
+            {/* Performance Bars */}
+            <div className="space-y-3 font-mono text-xs">
+              <div>
+                <div className="flex justify-between mb-1">
+                  <span className="text-[#10B981] font-bold">Training Accuracy:</span>
+                  <span className="font-bold">{accs.train}%</span>
+                </div>
+                <div className="h-3 w-full bg-[#E5E7EB] rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-[#10B981] transition-all duration-300"
+                    style={{ width: `${accs.train}%` }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <div className="flex justify-between mb-1">
+                  <span className="text-[#FF2E7E] font-bold">Test (Unseen) Accuracy:</span>
+                  <span className="font-bold">{accs.test}%</span>
+                </div>
+                <div className="h-3 w-full bg-[#E5E7EB] rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-[#FF2E7E] transition-all duration-300"
+                    style={{ width: `${accs.test}%` }}
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2 text-right text-[11px] font-bold text-[#6D5970]">
+                Generalization Gap: {accs.gap}%
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 7.4 How can we reduce overfitting? */}
+      <section className="space-y-4">
+        <div>
+          <span className="font-pixel text-[10px] uppercase font-bold text-[#FF2E7E] tracking-wider block mb-1">
+            SECTION 7.4
+          </span>
+          <h2 className="text-xl font-extrabold text-[#1A1020]">
+            How Can We Reduce Overfitting?
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs">
+          <div className="p-4 rounded-xl bg-white border border-[#F0D6E2] space-y-1">
+            <span className="font-bold text-[#FF2E7E] block">1. More Data</span>
+            <p className="text-[#6D5970]">Collect more diverse, representative training examples.</p>
+          </div>
+          <div className="p-4 rounded-xl bg-white border border-[#F0D6E2] space-y-1">
+            <span className="font-bold text-[#FF2E7E] block">2. Reduce Complexity</span>
+            <p className="text-[#6D5970]">Limit tree depth, increase KNN K, prune weak features.</p>
+          </div>
+          <div className="p-4 rounded-xl bg-white border border-[#F0D6E2] space-y-1">
+            <span className="font-bold text-[#FF2E7E] block">3. Regularization</span>
+            <p className="text-[#6D5970]">Penalize large feature weights (L1/L2 in logistic regression).</p>
+          </div>
+          <div className="p-4 rounded-xl bg-white border border-[#F0D6E2] space-y-1">
+            <span className="font-bold text-[#FF2E7E] block">4. Validation Tuning</span>
+            <p className="text-[#6D5970]">Pick hyperparameters using held-out validation data.</p>
+          </div>
+          <div className="p-4 rounded-xl bg-white border border-[#F0D6E2] space-y-1">
+            <span className="font-bold text-[#FF2E7E] block">5. Remove Leaking Features</span>
+            <p className="text-[#6D5970]">Eliminate IDs or proxy variables that accidentally give away the label.</p>
+          </div>
+          <div className="p-4 rounded-xl bg-white border border-[#FF2E7E] space-y-1">
+            <span className="font-bold text-[#FF2E7E] block">6. K-Fold Cross-Validation</span>
+            <p className="text-[#6D5970]">Rotate validation folds to reduce estimation variance.</p>
+          </div>
+        </div>
+
+        <Callout type="tip" title="Improvement Added: Cross-Validation in One Sentence">
+          <strong>Split the training data into k folds (say 5), train on 4 and validate on the 5th, rotate 5 times, and average the results.</strong>
+          This delivers a significantly more reliable estimate than a single train/validation split, particularly on smaller datasets.
         </Callout>
 
-        <div className="space-y-2">
-          <span className="text-xs font-bold text-[#1A1020] uppercase font-pixel tracking-wider block">
-            KNN Model Capacity vs. Generalization Gap:
-          </span>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {overfittingData.map(d => (
-              <AccuracyBars
-                key={d.k}
-                label={d.label}
-                trainAcc={d.trainAcc}
-                testAcc={d.testAcc}
-                status={d.status}
-              />
-            ))}
-          </div>
-        </div>
-
-        <div className="space-y-2 pt-2">
-          <span className="text-xs font-bold text-[#1A1020] uppercase font-pixel tracking-wider block">
-            Decision Tree Depth vs. Generalization Gap:
-          </span>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {treeOverfitting.map(d => (
-              <AccuracyBars
-                key={d.label}
-                label={d.label}
-                trainAcc={d.trainAcc}
-                testAcc={d.testAcc}
-                status={d.status}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* Deployment Question */}
-        <div className="rounded-2xl border border-[#F0D6E2] bg-white p-5 shadow-sm space-y-3">
-          <p className="font-bold text-sm text-[#1A1020]">
-            Which model would you deploy to production: K = 1 (100% train / 80% test) or K = 15 (87% train / 89% test)?
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {[
-              { id: 'k1', label: 'Model K = 1 (100% Training Score)' },
-              { id: 'k15', label: 'Model K = 15 (89% Test Score, Small Gap)' },
-            ].map(opt => (
-              <button
-                key={opt.id}
-                onClick={() => setSelectedModel(opt.id)}
-                className={`p-3 rounded-xl border text-xs font-bold transition-all ${
-                  selectedModel === opt.id
-                    ? 'border-[#FF2E7E] bg-[#FFE4EF] text-[#FF2E7E]'
-                    : 'border-[#F0D6E2] text-[#6D5970]'
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-
-          {selectedModel && (
-            <div className="p-3.5 rounded-xl border border-[#A7F3D0] bg-[#ECFDF5] text-xs text-[#065F46] leading-relaxed">
-              <strong>Correct Decision:</strong> Always deploy <strong>K = 15</strong>. Even though K = 1 boasts a perfect 100% training score, it achieves that by memorizing single noise points. K = 15 demonstrates superior generalization with higher test accuracy.
-            </div>
-          )}
-        </div>
+        <KeyInsight>
+          <strong>Generalization</strong> is a model’s ability to perform well on new observations that come from the
+          intended real-world data distribution. That — not high training performance — is what we ultimately want.
+        </KeyInsight>
       </section>
 
-      {/* 7.3 How to Combat Overfitting */}
-      <section className="space-y-4">
-        <div>
-          <span className="font-pixel text-[10px] uppercase font-bold text-[#FF2E7E] tracking-wider block mb-1">
-            SECTION 03
-          </span>
-          <h2 className="text-xl font-extrabold text-[#1A1020]">
-            Techniques to Prevent Overfitting
-          </h2>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {[
-            {
-              title: 'Model Regularization / Simplification',
-              desc: 'Constrain model complexity: increase K in KNN, limit max tree depth, or apply L1/L2 penalty weights.',
-            },
-            {
-              title: 'Dataset Expansion',
-              desc: 'Acquire more representative training data. Outliers have diminishing influence as sample size grows.',
-            },
-            {
-              title: 'Independent Validation Tuning',
-              desc: 'Never tune hyperparameters on the final test set. Use a validation partition or cross-validation.',
-            },
-            {
-              title: 'Feature Selection & Pruning',
-              desc: 'Remove redundant, uninformative, or excessively noisy input dimensions that degrade generalization.',
-            },
-          ].map(t => (
-            <div key={t.title} className="p-4 rounded-2xl border border-[#F0D6E2] bg-white shadow-sm space-y-1">
-              <h4 className="font-bold text-xs text-[#1A1020]">{t.title}</h4>
-              <p className="text-xs text-[#6D5970] leading-relaxed">{t.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Quiz */}
-      <section className="pt-4 border-t border-[#F0D6E2]">
-        <Quiz
-          partNumber={7}
-          questions={[
-            {
-              question: 'A classifier scores 100% accuracy on its training partition, but only 74% on the held-out test partition. What diagnosis applies?',
-              options: [
-                'Underfitting due to an overly simple hypothesis class',
-                'Overfitting: the model has memorized training noise',
-                'The model is theoretically optimal',
-                'The test partition was incorrectly sampled',
-              ],
-              correctIndex: 1,
-              explanation: 'A substantial disparity between high training accuracy and significantly lower test accuracy is the hallmark signature of overfitting.',
-            },
-            {
-              question: 'Why is it an invalid methodology to iteratively adjust hyperparameter K until test set accuracy is maximized?',
-              options: [
-                'It causes computation to run exponentially slower',
-                'Information from the test set leaks into model selection, so the test score is no longer an honest estimate of generalization',
-                'Test sets are only mathematically compatible with linear regression',
-                'K cannot be tuned programmatically',
-              ],
-              correctIndex: 1,
-              explanation: 'If you optimize decisions based on the test set, the test set ceases to be unseen. Use an intermediate validation split for tuning, and the test set only once at the conclusion.',
-            },
-          ]}
-        />
-      </section>
+      <Quiz
+        partNumber={7}
+        questions={[
+          {
+            question: 'What is the primary indicator that a machine learning model is overfitting?',
+            options: [
+              'A large performance gap where training error is near zero but test/validation error is high.',
+              'Both training and test error are equally high.',
+              'The training time is under 1 second.',
+              'The confusion matrix contains zero False Positives.',
+            ],
+            correctIndex: 0,
+            explanation:
+              'Overfitting manifests as a wide generalization gap: near-perfect performance on familiar training data, but poor accuracy on unseen data.',
+          },
+          {
+            question: 'How does K-Fold Cross-Validation improve model evaluation?',
+            options: [
+              'By rotating through multiple train/test splits so every observation is validated, reducing the risk of a lucky or unlucky split.',
+              'By increasing the total number of features.',
+              'By guaranteeing 100% test accuracy.',
+              'By converting non-linear data into straight lines.',
+            ],
+            correctIndex: 0,
+            explanation:
+              'Averaging evaluation metrics across K distinct validation folds provides a much more robust performance estimate without peeking at the final test set.',
+          },
+        ]}
+      />
     </div>
   );
 }
