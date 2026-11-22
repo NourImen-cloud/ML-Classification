@@ -35,11 +35,6 @@ export const courseMetadata = {
   subtitle: 'From understanding the problem to understanding how machines learn to assign categories.',
   presenter: 'Boudjira Imen Nour El Houda',
   level: 'Computer Science · Introductory level · Supervised learning',
-  referenceTitle: 'Module 00: Introduction to Machine Learning | CMSC 173',
-  referenceImageUrl:
-    'https://images.openai.com/static-rsc-4/ml76Rrd24c1BEYRGDBobShWAPRgENPN1-_zcSOr4kM4prMmkafVNFsZ-N9r5isxaFts5DWsfH2U4k21nco5nCPazzzUpCBeciY8KNtkPGiyYi3cW28yWcVbQDZDfsM1-i0Cxh8ke854QY1OH0QozTkuosiwO6RW7pysC2AHU43Y?purpose=inline',
-  referencePortalUrl:
-    'https://portal.latarak.com/static/presentations/cmsc173/module-0/index.html?utm_source=chatgpt.com',
 };
 
 // 5 Parts Definition

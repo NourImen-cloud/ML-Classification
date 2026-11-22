@@ -47,7 +47,7 @@ export default function SlidesPage() {
           </Link>
           <span className="text-[#516E5D]">/</span>
           <span className="text-xs font-mono font-bold tracking-wider text-[#F5C26B] uppercase flex items-center gap-1.5">
-            <span>🌲</span> Trail Slides (National Park Theme)
+            Slides
           </span>
         </div>
 

@@ -147,7 +147,7 @@ export default function HomePage() {
             href="/slides"
             className="px-4 py-2 text-xs md:text-sm font-bold flex items-center gap-1.5 rounded-xl bg-[#16322C] text-[#FFF4EB] border border-[#2B8C80]/50 hover:bg-[#E85D36] transition-colors shadow-xs"
           >
-            <span>🌲 Trail Slides Deck</span>
+            <span>Slides</span>
           </Link>
           <Link
             href="/lesson/1"
@@ -182,41 +182,9 @@ export default function HomePage() {
             <span className="text-[#FF2E7E]">Machine Learning</span>
           </h1>
 
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#FFF0F6] border border-[#FFB8D2] text-xs font-mono font-bold text-[#FF2E7E]">
-            <span>🎓</span> Presented by Boudjira Imen Nour El Houda
-          </div>
-
           <p className="text-[#4A3B4E] text-base md:text-lg max-w-2xl mx-auto leading-relaxed font-semibold">
             {courseMetadata.subtitle}
           </p>
-
-          {/* Reference Citation Card */}
-          <div className="max-w-xl mx-auto bg-white/90 backdrop-blur-md rounded-2xl border-2 border-[#FFD6E5] p-3.5 shadow-sm text-left flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-3 min-w-0">
-              <img
-                src={courseMetadata.referenceImageUrl}
-                alt="CMSC 173 Cover"
-                className="w-12 h-12 rounded-xl object-cover border border-[#F0D6E2] flex-shrink-0"
-              />
-              <div className="min-w-0">
-                <p className="text-xs font-bold text-[#1A1020] truncate">
-                  {courseMetadata.referenceTitle}
-                </p>
-                <p className="text-[11px] text-[#6D5970] truncate">
-                  Official Course Curriculum Reference
-                </p>
-              </div>
-            </div>
-            <a
-              href={courseMetadata.referencePortalUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-[#FFF0F6] text-[#FF2E7E] border border-[#FFB8D2] hover:bg-[#FFE4EF] transition-colors whitespace-nowrap self-start sm:self-auto"
-            >
-              <span>portal.latarak.com</span>
-              <ExternalLink className="w-3 h-3" />
-            </a>
-          </div>
 
           <div className="py-2">
             <PixelMascot />
@@ -227,7 +195,7 @@ export default function HomePage() {
               href="/slides"
               className="px-6 py-2.5 text-xs md:text-sm font-bold flex items-center gap-2 rounded-xl bg-[#16322C] text-[#FFF4EB] border-2 border-[#E85D36] hover:bg-[#E85D36] transition-all shadow-md hover:scale-105"
             >
-              <span>🌲 Trail Slide Deck (National Park Theme)</span>
+              <span>Slides</span>
               <span>→</span>
             </Link>
             <Link
@@ -458,9 +426,6 @@ export default function HomePage() {
       <footer className="mt-auto border-t border-[#F0D6E2] bg-white py-8 px-6 text-center text-xs text-[#6D5970] space-y-2">
         <p className="font-pixel text-[#1A1020]">
           Classification in Machine Learning · Computer Science Curriculum
-        </p>
-        <p className="font-mono text-[11px]">
-          Adapted from {courseMetadata.referenceTitle}
         </p>
       </footer>
     </div>
