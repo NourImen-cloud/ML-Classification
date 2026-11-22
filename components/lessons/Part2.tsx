@@ -10,6 +10,7 @@ import {
 import { MathBlock, MathInline } from '@/components/ui/KatexFormula';
 import { ExternalImageCard } from '@/components/ui/ExternalImageCard';
 import { DecisionBoundaryScatterPlot } from '@/components/interactive/CurriculumVisuals';
+import ClassificationPlayground from '@/components/interactive/ClassificationPlayground';
 import {
   Sparkles,
   GitBranch,
@@ -306,183 +307,506 @@ export default function Part2() {
       {/* ─────────────────────────────────────────────────────────────
           SLIDE 16 — Introducing the classification algorithms
          ───────────────────────────────────────────────────────────── */}
-      <section id="slide-16" className="space-y-5 rounded-2xl border-2 border-[#F0D6E2] bg-white p-6 shadow-xs">
+      <section id="slide-16" className="space-y-6 rounded-2xl border-2 border-[#F0D6E2] bg-white p-6 shadow-xs">
         <div className="flex items-center justify-between border-b border-[#F0D6E2] pb-3">
           <div className="flex items-center gap-2.5">
             <span className="font-pixel text-xs px-2.5 py-1 rounded-full bg-[#FFE4EF] text-[#8B5CF6] font-bold border border-[#FFB8D2]">
               SLIDE 16
             </span>
             <h2 className="text-xl md:text-2xl font-extrabold text-[#1A1020]">
-              Introducing the classification algorithms
+              Introducing the Classification Algorithms
             </h2>
           </div>
           <span className="text-xs font-mono font-semibold text-[#6D5970] bg-[#FFF0F6] px-2.5 py-1 rounded-full border border-[#FFB8D2]">
-            Three Approaches
+            Core Paradigms
           </span>
         </div>
 
         <div className="space-y-3 text-sm text-[#4A3B4E] leading-relaxed">
           <p>
-            We have now established the central problem: We have observations, each described by features, and we want to predict their classes.
+            We have established the core classification challenge: given an observation described by features (such as links and suspicious words), predict which category it belongs to.
           </p>
           <p className="font-semibold text-[#1A1020]">
-            But how does a model actually learn the relationship between features and labels?
+            How does an algorithm learn this relationship from past examples?
           </p>
           <p>
-            There is no single method for solving this problem. Different classification algorithms use different mathematical approaches to learn classification rules. We will focus on three fundamental algorithms:
+            Instead of hand-coding thousands of brittle <code className="px-1.5 py-0.5 rounded bg-[#FFF0F6] text-[#FF2E7E] font-mono text-xs font-bold">if/else</code> rules, different machine learning algorithms use completely different mathematical philosophies. Below, we break down each algorithm with an <strong>intuitive everyday analogy</strong>, its <strong>step-by-step mechanism</strong>, its <strong>decision boundary geometry</strong>, and the <strong>classic traps</strong> students must watch out for.
           </p>
         </div>
 
-        {/* 3 Core Algorithms with Verified Citations & Visuals */}
-        <div className="space-y-6">
-          {/* 1. KNN */}
-          <div className="space-y-2 p-4 rounded-xl border border-[#F0D6E2] bg-white">
+        {/* ─── ALGORITHM 1: KNN ─── */}
+        <div className="rounded-2xl border-2 border-[#FFD6E5] bg-[#FFFDFE] p-5 space-y-4 shadow-sm">
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-[#FFE4EF] text-[#FF2E7E] text-xs font-mono font-bold flex items-center justify-center">
+              <span className="w-7 h-7 rounded-full bg-[#FF2E7E] text-white text-xs font-mono font-extrabold flex items-center justify-center">
                 1
               </span>
-              <h3 className="font-extrabold text-base text-[#1A1020]">K-Nearest Neighbors (KNN)</h3>
+              <h3 className="font-extrabold text-lg text-[#1A1020]">K-Nearest Neighbors (KNN)</h3>
             </div>
-            <p className="text-xs text-[#4A3B4E] leading-relaxed">
-              KNN classifies a new observation by examining the classes of the nearest training observations. Its central idea is that observations that are close to one another in feature space may share similar labels.
-            </p>
-            <ExternalImageCard
-              src="https://images.openai.com/static-rsc-4/-UxuLGqx3F4IE4CFtz2MBhNlq5tNtY98hggMQbLO19QRdY5RfG5ZJ55iRNjG9VPDm1L1vVsQ8h4BdbhUw0HJITBhjbjxl4KdrH_AzCLyTy_sVlbze_M1nYkPoaIiQwiIDfr7GZCjPPeST4Ubd1kgYHzfuWYp-unUPbJKlIq-WUQ?purpose=inline"
-              title="K-Nearest Neighbors (KNN): A Simple Yet Powerful Machine Learning Algorithm"
-              sourceUrl="https://medium.com/%40ruhelasamridhi/k-nearest-neighbors-knn-a-simple-yet-powerful-machine-learning-algorithm-c3a3bd83057a?utm_source=chatgpt.com"
-              sourceLabel="medium.com"
-              caption="KNN voting radius: determining class assignment by Euclidean neighborhood."
-            />
+            <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-[#FFE4EF] text-[#FF2E7E] border border-[#FFB8D2]">
+              Distance-Based · Lazy Learner
+            </span>
           </div>
 
-          {/* 2. Decision Trees */}
-          <div className="space-y-2 p-4 rounded-xl border border-[#F0D6E2] bg-white">
+          {/* Everyday Analogy */}
+          <div className="p-3.5 rounded-xl bg-[#FFF0F6] border border-[#FFB8D2] space-y-1.5">
+            <div className="flex items-center gap-1.5 text-xs font-bold font-mono text-[#96003B] uppercase tracking-wider">
+              <span>💡</span> Everyday Mental Model: The Cafeteria Table
+            </div>
+            <p className="text-xs text-[#2D1F33] leading-relaxed">
+              &ldquo;Show me your friends, and I will tell you who you are.&rdquo; If a new student enters the university dining hall and sits at a table surrounded by four heavy metal fans and one pop music fan, what is your best bet on their music taste? Heavy metal—by majority vote! That is KNN in a nutshell.
+            </p>
+          </div>
+
+          {/* How It Works (Step-by-Step) */}
+          <div className="space-y-2">
+            <h4 className="font-bold text-xs uppercase tracking-wider text-[#6D5970] font-mono">
+              How KNN Works (Step-by-Step)
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+              <div className="p-3 rounded-xl border border-[#F0D6E2] bg-white space-y-1">
+                <span className="font-bold text-[#FF2E7E] block">1. Zero Training (Lazy)</span>
+                <p className="text-[#4A3B4E]">
+                  KNN performs no mathematical optimization during training! It simply memorizes the coordinates of every training observation in the feature space.
+                </p>
+              </div>
+              <div className="p-3 rounded-xl border border-[#F0D6E2] bg-white space-y-1">
+                <span className="font-bold text-[#FF2E7E] block">2. Calculate Distances</span>
+                <p className="text-[#4A3B4E]">
+                  When an unlabelled email <MathInline formula="p" /> arrives, KNN computes the straight-line Euclidean distance to all stored points <MathInline formula="q" />:
+                </p>
+                <MathBlock formula="d(p, q) = \sqrt{\sum_{i=1}^d (p_i - q_i)^2}" />
+              </div>
+              <div className="p-3 rounded-xl border border-[#F0D6E2] bg-white space-y-1">
+                <span className="font-bold text-[#FF2E7E] block">3. Majority Vote</span>
+                <p className="text-[#4A3B4E]">
+                  It picks the <MathInline formula="K" /> closest neighbors and tallies their votes. The majority class wins:
+                </p>
+                <MathBlock formula="\hat{y} = 	ext{mode}(y_1, y_2, \dots, y_K)" />
+              </div>
+            </div>
+          </div>
+
+          {/* Geometry & Choice of K */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+            <div className="p-3.5 rounded-xl border border-rose-200 bg-rose-50/50 space-y-1">
+              <span className="font-bold text-rose-900 block font-mono">Small K (e.g. K = 1): High Variance (Overfitting)</span>
+              <p className="text-rose-800 leading-relaxed">
+                Extremely sensitive to individual quirks and noise. If a single noisy legitimate email is mislabeled as spam (like point E10), K=1 builds an isolated &ldquo;spam island&rdquo; right in legitimate territory!
+              </p>
+            </div>
+            <div className="p-3.5 rounded-xl border border-indigo-200 bg-indigo-50/50 space-y-1">
+              <span className="font-bold text-indigo-900 block font-mono">Large K (e.g. K = 9): High Bias (Underfitting)</span>
+              <p className="text-indigo-800 leading-relaxed">
+                The decision boundary becomes overly smooth and flat. If 80% of your dataset is legitimate, a large K will cause the dominant class to swamp all genuine minority spam clusters.
+              </p>
+            </div>
+          </div>
+
+          {/* Crucial Gotcha */}
+          <div className="p-3.5 rounded-xl border-2 border-amber-200 bg-amber-50/70 space-y-1.5 text-xs text-amber-900">
+            <div className="flex items-center gap-1.5 font-bold font-mono uppercase tracking-wider text-amber-950">
+              <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0" />
+              <span>Crucial Classroom Gotcha: Feature Scaling is Mandatory</span>
+            </div>
+            <p className="leading-relaxed">
+              Suppose Feature 1 is <em>Number of Links</em> (0–10) and Feature 2 is <em>Account Age in Hours</em> (0–10,000). A difference of 500 hours will completely overwhelm a difference of 4 links in the Euclidean square sum! Without standardization (<MathInline formula="z = \frac{x - \mu}{\sigma}" />), KNN effectively ignores the smaller feature.
+            </p>
+          </div>
+
+          <ExternalImageCard
+            src="https://images.openai.com/static-rsc-4/-UxuLGqx3F4IE4CFtz2MBhNlq5tNtY98hggMQbLO19QRdY5RfG5ZJ55iRNjG9VPDm1L1vVsQ8h4BdbhUw0HJITBhjbjxl4KdrH_AzCLyTy_sVlbze_M1nYkPoaIiQwiIDfr7GZCjPPeST4Ubd1kgYHzfuWYp-unUPbJKlIq-WUQ?purpose=inline"
+            title="K-Nearest Neighbors (KNN): A Simple Yet Powerful Machine Learning Algorithm"
+            sourceUrl="https://medium.com/%40ruhelasamridhi/k-nearest-neighbors-knn-a-simple-yet-powerful-machine-learning-algorithm-c3a3bd83057a?utm_source=chatgpt.com"
+            sourceLabel="medium.com"
+            caption="KNN voting radius: determining class assignment by Euclidean neighborhood."
+          />
+        </div>
+
+        {/* ─── ALGORITHM 2: DECISION TREES ─── */}
+        <div className="rounded-2xl border-2 border-[#E5DBFF] bg-[#FFFDFE] p-5 space-y-4 shadow-sm">
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-[#FFE4EF] text-[#8B5CF6] text-xs font-mono font-bold flex items-center justify-center">
+              <span className="w-7 h-7 rounded-full bg-[#8B5CF6] text-white text-xs font-mono font-extrabold flex items-center justify-center">
                 2
               </span>
-              <h3 className="font-extrabold text-base text-[#1A1020]">Decision Trees</h3>
+              <h3 className="font-extrabold text-lg text-[#1A1020]">Decision Trees</h3>
             </div>
-            <p className="text-xs text-[#4A3B4E] leading-relaxed">
-              Decision Trees classify observations by applying a sequence of feature-based decision rules. Each internal node represents a test, each branch represents an outcome, and each leaf represents a predicted class.
-            </p>
-            <ExternalImageCard
-              src="https://images.openai.com/static-rsc-4/FWlWoMwBYQCnrGETeQMHhAftp69sqC7Cuj3_PywxzJb8SfxOlMYdylzOzWnJDkPClMjFxM4aoGEa3Rth_9LhWT35RnAFXZ7Bnki1NIT4BkplB6XqfA12iUJFPJkYtNvNl6ZwTIgOah9qlh12zLHl8sxdaHiGxFOJl5I8t7nw1VY?purpose=inline"
-              title="Decision Trees in Data Science: A Comprehensive Guide"
-              sourceUrl="https://medium.com/%40shivasaichakradhar/decision-trees-in-data-science-a-comprehensive-guide-352d980a3503?utm_source=chatgpt.com"
-              sourceLabel="medium.com"
-              caption="Hierarchical feature splitting tree from root condition to leaf prediction."
-            />
+            <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-[#F5F3FF] text-[#8B5CF6] border border-[#DDD6FE]">
+              Logic-Based · Hierarchical Flowchart
+            </span>
           </div>
 
-          {/* 3. Logistic Regression */}
-          <div className="space-y-2 p-4 rounded-xl border border-[#F0D6E2] bg-white">
+          {/* Everyday Analogy */}
+          <div className="p-3.5 rounded-xl bg-[#F5F3FF] border border-[#DDD6FE] space-y-1.5">
+            <div className="flex items-center gap-1.5 text-xs font-bold font-mono text-[#5B21B6] uppercase tracking-wider">
+              <span>💡</span> Everyday Mental Model: A Game of 20 Questions / Medical Triage
+            </div>
+            <p className="text-xs text-[#2D1F33] leading-relaxed">
+              Imagine an emergency triage nurse checking a patient: <em>&ldquo;Is heart rate &gt; 120?&rdquo;</em> If yes, <em>&ldquo;Is blood pressure &lt; 90?&rdquo;</em> If yes, <strong>Immediate Intensive Care</strong>. A Decision Tree operates the exact same way: a cascading sequence of simple yes/no questions leading to a final diagnosis.
+            </p>
+          </div>
+
+          {/* How It Works & Tree Anatomy */}
+          <div className="space-y-2">
+            <h4 className="font-bold text-xs uppercase tracking-wider text-[#6D5970] font-mono">
+              Tree Anatomy & How It Splits
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+              <div className="p-3 rounded-xl border border-[#F0D6E2] bg-white space-y-1">
+                <span className="font-bold text-[#8B5CF6] block">1. Root Node</span>
+                <p className="text-[#4A3B4E]">
+                  The master starting question that evaluates all incoming data (e.g., <em>&ldquo;Are links &gt; 3.5?&rdquo;</em>).
+                </p>
+              </div>
+              <div className="p-3 rounded-xl border border-[#F0D6E2] bg-white space-y-1">
+                <span className="font-bold text-[#8B5CF6] block">2. Internal Nodes</span>
+                <p className="text-[#4A3B4E]">
+                  Subsequent tests that further partition subsets into cleaner, more homogeneous groups.
+                </p>
+              </div>
+              <div className="p-3 rounded-xl border border-[#F0D6E2] bg-white space-y-1">
+                <span className="font-bold text-[#8B5CF6] block">3. Leaf Nodes</span>
+                <p className="text-[#4A3B4E]">
+                  Terminal buckets with no further splits. They deliver the final predicted class or class probability.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Gini Impurity in Plain English */}
+          <div className="p-4 rounded-xl border border-[#E5DBFF] bg-white space-y-2 text-xs">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-sm text-[#5B21B6]">Demystifying Gini Impurity (Math in Plain English)</span>
+              <span className="font-mono text-[11px] text-[#6D5970]">Splitting Criterion</span>
+            </div>
+            <p className="text-[#4A3B4E] leading-relaxed">
+              How does the tree pick which feature and threshold to split on? It measures <strong>Gini Impurity</strong> (disorder / chaos) in each bucket:
+            </p>
+            <MathBlock formula="\text{Gini} = 1 - \sum_{k=1}^C p_k^2" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pt-1 font-mono text-[11px]">
+              <div className="p-2.5 rounded-lg bg-[#F5F3FF] border border-[#DDD6FE]">
+                <strong>Pure Leaf (Gini = 0.0):</strong> 100% of emails in the bucket are Spam. Total certainty!
+              </div>
+              <div className="p-2.5 rounded-lg bg-[#FFF0F6] border border-[#FFB8D2]">
+                <strong>Impure Leaf (Gini = 0.5):</strong> 50% Spam, 50% Not Spam. Maximum confusion / toss-up.
+              </div>
+            </div>
+            <p className="text-[#6D5970] pt-1">
+              At each step, the algorithm chooses the split that creates the <strong>largest reduction in Gini Impurity</strong> (Information Gain).
+            </p>
+          </div>
+
+          {/* Geometry & Overfitting Warning */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+            <div className="p-3.5 rounded-xl border border-indigo-200 bg-indigo-50/50 space-y-1">
+              <span className="font-bold text-indigo-900 block font-mono">Boundary Geometry: Axis-Aligned Box Cuts</span>
+              <p className="text-indigo-800 leading-relaxed">
+                Because every question tests only one feature at a time (<MathInline formula="x_1 \ge c" />), decision boundaries are strictly <strong>horizontal or vertical cuts</strong> on a 2D plot. A tree cannot draw a smooth diagonal without stair-stepping.
+              </p>
+            </div>
+            <div className="p-3.5 rounded-xl border border-rose-200 bg-rose-50/50 space-y-1">
+              <span className="font-bold text-rose-900 block font-mono">The Memorization Monster (Overfitting)</span>
+              <p className="text-rose-800 leading-relaxed">
+                Without constraints, a tree will branch until every single training point sits in its own leaf (100% train accuracy, but fails on new emails). <em>Always prune or set <code className="font-bold">max_depth</code>!</em>
+              </p>
+            </div>
+          </div>
+
+          <ExternalImageCard
+            src="https://images.openai.com/static-rsc-4/FWlWoMwBYQCnrGETeQMHhAftp69sqC7Cuj3_PywxzJb8SfxOlMYdylzOzWnJDkPClMjFxM4aoGEa3Rth_9LhWT35RnAFXZ7Bnki1NIT4BkplB6XqfA12iUJFPJkYtNvNl6ZwTIgOah9qlh12zLHl8sxdaHiGxFOJl5I8t7nw1VY?purpose=inline"
+            title="Decision Trees in Data Science: A Comprehensive Guide"
+            sourceUrl="https://medium.com/%40shivasaichakradhar/decision-trees-in-data-science-a-comprehensive-guide-352d980a3503?utm_source=chatgpt.com"
+            sourceLabel="medium.com"
+            caption="Hierarchical feature splitting tree from root condition to leaf prediction."
+          />
+        </div>
+
+        {/* ─── ALGORITHM 3: LOGISTIC REGRESSION ─── */}
+        <div className="rounded-2xl border-2 border-[#D1FAE5] bg-[#FFFDFE] p-5 space-y-4 shadow-sm">
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-[#FFE4EF] text-[#10B981] text-xs font-mono font-bold flex items-center justify-center">
+              <span className="w-7 h-7 rounded-full bg-[#10B981] text-white text-xs font-mono font-extrabold flex items-center justify-center">
                 3
               </span>
-              <h3 className="font-extrabold text-base text-[#1A1020]">Logistic Regression</h3>
+              <h3 className="font-extrabold text-lg text-[#1A1020]">Logistic Regression</h3>
             </div>
-            <p className="text-xs text-[#4A3B4E] leading-relaxed">
-              Logistic Regression uses a mathematical function to estimate the probability of a class based on the input features. For binary classification, it commonly uses the sigmoid function to transform a linear score into a value between zero and one.
+            <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-[#ECFDF5] text-[#059669] border border-[#A7F3D0]">
+              Probabilistic · Linear Classifier
+            </span>
+          </div>
+
+          {/* Everyday Analogy */}
+          <div className="p-3.5 rounded-xl bg-[#ECFDF5] border border-[#A7F3D0] space-y-1.5">
+            <div className="flex items-center gap-1.5 text-xs font-bold font-mono text-[#065F46] uppercase tracking-wider">
+              <span>💡</span> Everyday Mental Model: The Calibrated Risk Dial / Loan Officer
+            </div>
+            <p className="text-xs text-[#2D1F33] leading-relaxed">
+              Instead of giving a blunt, unhelpful &ldquo;Yes&rdquo; or &ldquo;No&rdquo;, a cautious bank loan officer says: <em>&ldquo;Based on your debt-to-income ratio, there is an <strong>82% probability</strong> you will repay this mortgage.&rdquo;</em> Only after estimating that calibrated probability do you apply a policy threshold to make a final decision.
             </p>
-            <ExternalImageCard
-              src="https://images.openai.com/static-rsc-4/vTQqTOnSagekeBgFiMaDTy-movPNzrf1ZRs1jC9Llstq07aJaZSvZEPjFKOe4HRa-zgokbUkiqWHTDIy2XVkYb8OPidq0Nc8aaX4kzUmcyg8q__4kJezSIj0nSOu70ooteROTNQ1w0UwcZBR38sR4oIAri9MU2pCUlcHesvWoiw?purpose=inline"
-              title="Logistic Regression Explained: ML Coding for Interviews"
-              sourceUrl="https://medium.com/nailing-the-ai-ml-interview/selection-of-the-loss-functions-for-logistic-regression-ed2077f7075e?utm_source=chatgpt.com"
-              sourceLabel="medium.com"
-              caption="Sigmoid S-curve mapping continuous linear inputs to calibrated probabilities in [0, 1]."
-            />
+          </div>
+
+          {/* The 2-Stage Engine */}
+          <div className="space-y-2">
+            <h4 className="font-bold text-xs uppercase tracking-wider text-[#6D5970] font-mono">
+              The 2-Stage Mathematical Engine
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+              <div className="p-3.5 rounded-xl border border-[#D1FAE5] bg-white space-y-1.5">
+                <span className="font-bold text-[#059669] block font-mono">Stage 1: Linear Feature Scoring</span>
+                <p className="text-[#4A3B4E]">
+                  Computes a weighted linear sum across features. Features that indicate spam get positive weights, legitimate features get negative weights:
+                </p>
+                <MathBlock formula="z = w_0 + w_1 x_1 + w_2 x_2 + \dots + w_d x_d" />
+                <p className="text-[11px] text-[#6D5970]">
+                  This raw score <MathInline formula="z" /> can range freely from <MathInline formula="-\infty" /> to <MathInline formula="+\infty" />.
+                </p>
+              </div>
+
+              <div className="p-3.5 rounded-xl border border-[#D1FAE5] bg-white space-y-1.5">
+                <span className="font-bold text-[#059669] block font-mono">Stage 2: The Sigmoid Squasher</span>
+                <p className="text-[#4A3B4E]">
+                  Passes the raw score <MathInline formula="z" /> through the S-shaped <strong>Sigmoid function</strong> to squash it into a valid probability in <MathInline formula="[0, 1]" />:
+                </p>
+                <MathBlock formula="\sigma(z) = \frac{1}{1 + e^{-z}}" />
+                <ul className="text-[11px] space-y-0.5 text-[#6D5970] font-mono">
+                  <li>• <MathInline formula="z = 0 \implies P = 0.5" /> (Exact boundary)</li>
+                  <li>• <MathInline formula="z \gg 0 \implies P \to 1.0" /> (High confidence spam)</li>
+                  <li>• <MathInline formula="z \ll 0 \implies P \to 0.0" /> (High confidence legit)</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Why called Regression? */}
+          <div className="p-3.5 rounded-xl border border-[#F0D6E2] bg-[#FFF7FA] text-xs space-y-1">
+            <span className="font-bold text-[#96003B] block">Why is it called &ldquo;Regression&rdquo; if it performs Classification?</span>
+            <p className="text-[#4A3B4E] leading-relaxed">
+              Because mathematically, it performs linear regression on the continuous <strong>log-odds</strong> (logit) of the positive class:
+            </p>
+            <MathBlock formula="\ln\left(\frac{P(y=1 \mid x)}{1 - P(y=1 \mid x)}\right) = w^T x + b" />
+            <p className="text-[#6D5970]">
+              The model regresses log-odds continuously, and turns into a classifier by applying a cutoff threshold: <MathInline formula="\hat{y} = 1 \text{ if } P \ge 0.5" />.
+            </p>
+          </div>
+
+          {/* Geometry & Limitation */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+            <div className="p-3 rounded-xl border border-emerald-200 bg-emerald-50/50 space-y-1">
+              <span className="font-bold text-emerald-900 block font-mono">Boundary Geometry: A Flat Straight Line</span>
+              <p className="text-emerald-800 leading-relaxed">
+                The decision boundary corresponds to <MathInline formula="z = 0" />, which forms a single straight ruler line in 2D or a flat hyperplane in high dimensions.
+              </p>
+            </div>
+            <div className="p-3 rounded-xl border border-amber-200 bg-amber-50/50 space-y-1">
+              <span className="font-bold text-amber-900 block font-mono">Limitation: Linear Separability Only</span>
+              <p className="text-amber-800 leading-relaxed">
+                Standard Logistic Regression cannot separate circular clusters or XOR distributions without manual feature transformations (e.g. adding interaction terms or polynomials).
+              </p>
+            </div>
+          </div>
+
+          <ExternalImageCard
+            src="https://images.openai.com/static-rsc-4/vTQqTOnSagekeBgFiMaDTy-movPNzrf1ZRs1jC9Llstq07aJaZSvZEPjFKOe4HRa-zgokbUkiqWHTDIy2XVkYb8OPidq0Nc8aaX4kzUmcyg8q__4kJezSIj0nSOu70ooteROTNQ1w0UwcZBR38sR4oIAri9MU2pCUlcHesvWoiw?purpose=inline"
+            title="Logistic Regression Explained: ML Coding for Interviews"
+            sourceUrl="https://medium.com/nailing-the-ai-ml-interview/selection-of-the-loss-functions-for-logistic-regression-ed2077f7075e?utm_source=chatgpt.com"
+            sourceLabel="medium.com"
+            caption="Sigmoid S-curve mapping continuous linear inputs to calibrated probabilities in [0, 1]."
+          />
+        </div>
+
+        {/* ─── ALGORITHM 4: SUPPORT VECTOR MACHINE (SVM) ─── */}
+        <div className="rounded-2xl border-2 border-[#BFDBFE] bg-[#FFFDFE] p-5 space-y-4 shadow-sm">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center gap-2">
+              <span className="w-7 h-7 rounded-full bg-[#3B82F6] text-white text-xs font-mono font-extrabold flex items-center justify-center">
+                4
+              </span>
+              <h3 className="font-extrabold text-lg text-[#1A1020]">Support Vector Machine (SVM)</h3>
+            </div>
+            <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-[#EFF6FF] text-[#2563EB] border border-[#BFDBFE]">
+              Geometric Margin · Kernel Trick
+            </span>
+          </div>
+
+          {/* Everyday Analogy */}
+          <div className="p-3.5 rounded-xl bg-[#EFF6FF] border border-[#BFDBFE] space-y-1.5">
+            <div className="flex items-center gap-1.5 text-xs font-bold font-mono text-[#1E40AF] uppercase tracking-wider">
+              <span>💡</span> Everyday Mental Model: The Widest Highway Between Two Towns
+            </div>
+            <p className="text-xs text-[#2D1F33] leading-relaxed">
+              Many different lines can separate two groups. But SVM specifically finds the <strong>widest possible paved highway</strong> with the largest safety median between them. The houses closest to the fence of the highway are the <strong>Support Vectors</strong>.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+            <div className="p-3 rounded-xl border border-blue-200 bg-blue-50/50 space-y-1">
+              <span className="font-bold text-blue-900 block font-mono">The Support Vectors Superpower</span>
+              <p className="text-blue-800 leading-relaxed">
+                Only the borderline points (Support Vectors) determine where the separating boundary lies. You can shift or remove all other distant training points without altering the model at all!
+              </p>
+            </div>
+            <div className="p-3 rounded-xl border border-purple-200 bg-purple-50/50 space-y-1">
+              <span className="font-bold text-purple-900 block font-mono">The Kernel Trick</span>
+              <p className="text-purple-800 leading-relaxed">
+                When points cannot be cut by a straight line in 2D, SVM mathematically projects them into a higher 3D dimension (like popping a flat rubber sheet into a bowl) where a flat sheet can cleanly separate them.
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* Explanation */}
-        <Callout type="info" title="Explanation">
-          <div className="space-y-2 text-xs md:text-sm">
-            <p>
-              All three algorithms can solve classification problems, but they learn in different ways:
-            </p>
-            <ul className="list-disc pl-5 space-y-1 text-xs">
-              <li><strong>KNN</strong> relies on distances between observations.</li>
-              <li><strong>Decision Trees</strong> rely on decision rules and feature-based splits.</li>
-              <li><strong>Logistic Regression</strong> learns numerical parameters that determine how input features influence the predicted probability.</li>
-            </ul>
-            <p>
-              This is why understanding the classification problem first is important. Once students understand what the algorithms are trying to achieve, the differences between their mathematical approaches become much easier to understand.
-            </p>
+        {/* ─── LIVE INTERACTIVE PLAYGROUND ─── */}
+        <div className="space-y-3 pt-2">
+          <div className="flex items-center justify-between border-b border-[#F0D6E2] pb-2">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-[#FF2E7E]" />
+              <h4 className="font-extrabold text-sm text-[#1A1020]">
+                Interactive Lab: Compare Decision Boundaries Live
+              </h4>
+            </div>
+            <span className="text-[11px] font-mono text-[#6D5970]">
+              Click any algorithm to observe its boundary on the 10-email dataset
+            </span>
           </div>
-        </Callout>
+          <p className="text-xs text-[#4A3B4E]">
+            Notice how <strong>KNN (K=1)</strong> creates a tight island around noise point E10, while <strong>KNN (K=7)</strong> smoothes it out. Watch how <strong>Decision Trees</strong> draw orthogonal boxes, and <strong>Logistic Regression</strong> draws a clean straight line:
+          </p>
+          <div className="rounded-2xl border-2 border-[#FFD6E5] bg-white p-4 shadow-sm">
+            <ClassificationPlayground />
+          </div>
+        </div>
       </section>
 
       {/* ─────────────────────────────────────────────────────────────
           SLIDE 17 — Are all classification models equally suitable?
          ───────────────────────────────────────────────────────────── */}
-      <section id="slide-17" className="space-y-5 rounded-2xl border-2 border-[#F0D6E2] bg-white p-6 shadow-xs">
+      <section id="slide-17" className="space-y-6 rounded-2xl border-2 border-[#F0D6E2] bg-white p-6 shadow-xs">
         <div className="flex items-center justify-between border-b border-[#F0D6E2] pb-3">
           <div className="flex items-center gap-2.5">
             <span className="font-pixel text-xs px-2.5 py-1 rounded-full bg-[#FFE4EF] text-[#8B5CF6] font-bold border border-[#FFB8D2]">
               SLIDE 17
             </span>
             <h2 className="text-xl md:text-2xl font-extrabold text-[#1A1020]">
-              Are all classification models equally suitable?
+              Model Selection & The Master Comparison
             </h2>
           </div>
           <span className="text-xs font-mono font-semibold text-[#6D5970] bg-[#FFF0F6] px-2.5 py-1 rounded-full border border-[#FFB8D2]">
-            Model Selection
+            No Free Lunch
           </span>
         </div>
 
-        <div className="p-3 bg-[#FFF0F6] rounded-xl border border-[#FFB8D2] font-bold text-sm text-[#FF2E7E]">
-          No. There is no single universally best classification algorithm.
+        <div className="p-3.5 bg-[#FFF0F6] rounded-xl border border-[#FFB8D2] font-bold text-sm text-[#FF2E7E] flex items-center gap-2">
+          <span>⚡</span>
+          <span>Core Takeaway: There is no universally superior classification algorithm.</span>
         </div>
 
-        {/* Slide Content */}
-        <div className="space-y-3 text-sm text-[#4A3B4E] leading-relaxed">
-          <p>
-            The choice of classification algorithm depends on several characteristics of the problem, including:
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
-            <div className="p-2.5 bg-white rounded-lg border border-[#F0D6E2]">The size of the dataset</div>
-            <div className="p-2.5 bg-white rounded-lg border border-[#F0D6E2]">The number and nature of the features</div>
-            <div className="p-2.5 bg-white rounded-lg border border-[#F0D6E2]">Linear vs. complex nonlinear relationships</div>
-            <div className="p-2.5 bg-white rounded-lg border border-[#F0D6E2]">Interpretability and audit requirements</div>
-            <div className="p-2.5 bg-white rounded-lg border border-[#F0D6E2]">Computational resources available</div>
-            <div className="p-2.5 bg-white rounded-lg border border-[#F0D6E2]">Relative consequences of error types</div>
+        {/* Master Comparison Table */}
+        <div className="space-y-2">
+          <h4 className="font-bold text-xs uppercase tracking-wider text-[#6D5970] font-mono">
+            The Master Algorithm Comparison Matrix
+          </h4>
+          <CompareTable
+            headers={['Algorithm', 'Mental Model', 'Boundary Shape', 'Scaling Needed?', 'Key Strength', 'Main Vulnerability']}
+            rows={[
+              [
+                'K-Nearest Neighbors (KNN)',
+                'Majority vote of neighbors',
+                'Irregular Voronoi islands',
+                'Yes (Essential)',
+                'Zero training time; highly intuitive',
+                'Slow prediction on large data; dominated by unscaled features',
+              ],
+              [
+                'Decision Tree',
+                '20 Questions flowchart',
+                'Axis-aligned rectangular boxes',
+                'No (Invariant)',
+                'High interpretability; handles mixed data',
+                'Severe overfitting if depth is unconstrained',
+              ],
+              [
+                'Logistic Regression',
+                'Calibrated probability dial',
+                'Flat straight line / hyperplane',
+                'Recommended',
+                'Fast; outputs true calibrated probabilities',
+                'Cannot capture non-linear patterns natively',
+              ],
+              [
+                'Support Vector Machine',
+                'Widest safety highway',
+                'Max-margin hyperplane or curved kernel',
+                'Yes (Essential)',
+                'Robust against outliers outside margin',
+                'Slower training on huge data; hard to interpret',
+              ],
+            ]}
+            highlight={[0, 1, 2]}
+          />
+        </div>
+
+        {/* Socratic Classroom Questions for Teachers */}
+        <div className="rounded-2xl border-2 border-[#FFB8D2] bg-[#FFF7FA] p-5 space-y-4 shadow-sm">
+          <div className="flex items-center gap-2">
+            <span className="font-pixel text-[11px] px-2.5 py-0.5 rounded-full bg-[#FF2E7E] text-white font-bold">
+              TEACHER SCRIPT
+            </span>
+            <span className="font-bold text-sm text-[#1A1020]">
+              Socratic Questions to Ask Your Students During Lecture
+            </span>
           </div>
 
-          <div className="space-y-2 pt-2">
-            <h4 className="font-bold text-xs uppercase text-[#6D5970] tracking-wider font-mono">
-              Model Tradeoffs Summary
-            </h4>
-            <div className="space-y-2 text-xs">
-              <div className="p-3 bg-[#FFF7FA] rounded-lg border border-[#FFD6E5]">
-                <strong className="text-[#FF2E7E] block mb-1">K-Nearest Neighbors (KNN):</strong>
-                Useful for understanding classification through similarity and distance, but can become computationally expensive when making predictions on very large datasets.
-              </div>
-              <div className="p-3 bg-[#FFF7FA] rounded-lg border border-[#FFD6E5]">
-                <strong className="text-[#8B5CF6] block mb-1">Decision Trees:</strong>
-                Produce understandable decision rules, but an excessively complex or deep tree may memorize the training examples (overfitting).
-              </div>
-              <div className="p-3 bg-[#FFF7FA] rounded-lg border border-[#FFD6E5]">
-                <strong className="text-[#10B981] block mb-1">Logistic Regression:</strong>
-                Provides a relatively simple, fast mathematical model, but its standard form may not capture complex nonlinear relationships without additional feature transformations.
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+            <div className="p-3 rounded-xl bg-white border border-[#FFD6E5] space-y-1">
+              <span className="font-bold text-[#FF2E7E] block">Q1: The Noise Point E10 Dilemma</span>
+              <p className="text-[#4A3B4E]">
+                <em>&ldquo;Look at noise point E10 (Links: 2, Words: 2). What does KNN predict when K=1 versus K=5?&rdquo;</em>
+                <br />
+                <span className="text-[#6D5970] text-[11px]">→ At K=1, it predicts Spam because it memorizes E10. At K=5, the 4 surrounding legitimate emails outvote it!</span>
+              </p>
+            </div>
+
+            <div className="p-3 rounded-xl bg-white border border-[#FFD6E5] space-y-1">
+              <span className="font-bold text-[#8B5CF6] block">Q2: The Diagonal Boundary Riddle</span>
+              <p className="text-[#4A3B4E]">
+                <em>&ldquo;Can a standard Decision Tree ever draw a smooth 45-degree diagonal line?&rdquo;</em>
+                <br />
+                <span className="text-[#6D5970] text-[11px]">→ No! Every tree split tests only one feature (<MathInline formula="x_i \ge c" />). It must stair-step horizontally and vertically.</span>
+              </p>
+            </div>
+
+            <div className="p-3 rounded-xl bg-white border border-[#FFD6E5] space-y-1">
+              <span className="font-bold text-[#10B981] block">Q3: Why Not Plain Linear Regression?</span>
+              <p className="text-[#4A3B4E]">
+                <em>&ldquo;Why can&apos;t we just use regular Linear Regression for spam classification?&rdquo;</em>
+                <br />
+                <span className="text-[#6D5970] text-[11px]">→ Linear regression outputs numbers like -3.5 or +14.2, which make no sense as probabilities! The Sigmoid function is required to bound scores between 0 and 1.</span>
+              </p>
+            </div>
+
+            <div className="p-3 rounded-xl bg-white border border-[#FFD6E5] space-y-1">
+              <span className="font-bold text-[#3B82F6] block">Q4: The Feature Scale Test</span>
+              <p className="text-[#4A3B4E]">
+                <em>&ldquo;If we multiply the Links feature by 1,000, which algorithm changes: KNN or Decision Tree?&rdquo;</em>
+                <br />
+                <span className="text-[#6D5970] text-[11px]">→ KNN drastically changes (distance calculation is hijacked). The Decision Tree doesn&apos;t change at all because ordering remains identical!</span>
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Explanation */}
-        <Callout type="info" title="Explanation">
-          <div className="space-y-2 text-xs md:text-sm">
+        {/* Final Insight Callout */}
+        <Callout type="tip" title="Rule of Thumb for Model Selection">
+          <div className="space-y-1.5 text-xs md:text-sm">
             <p>
-              There is no universally best classification algorithm for every problem. A model that performs well on one dataset may perform poorly on another.
+              When starting a new real-world classification project:
             </p>
-            <p>
-              Therefore, selecting a classifier requires understanding the data, the task and the evaluation criteria.
-            </p>
-            <KeyInsight>
-              This also introduces the idea that we should <strong>compare models using appropriate evaluation methods</strong> rather than choosing one simply because it is popular.
-            </KeyInsight>
+            <ul className="list-disc pl-5 space-y-1 text-xs">
+              <li>Start with <strong>Logistic Regression</strong> as a lightning-fast, interpretable baseline.</li>
+              <li>Try a <strong>Decision Tree</strong> (or an ensemble of trees like Random Forest) if you have non-linear feature interactions and need explainable rules.</li>
+              <li>Use <strong>KNN</strong> for quick prototypes on small, clean, standardized datasets where similarity clustering is natural.</li>
+              <li>Use <strong>SVM</strong> when dealing with high-dimensional spaces (e.g. text or bioinformatics) where margin robustness is paramount.</li>
+            </ul>
           </div>
         </Callout>
       </section>
