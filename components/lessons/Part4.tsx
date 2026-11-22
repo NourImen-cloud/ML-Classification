@@ -246,16 +246,95 @@ export default function Part4() {
             Consider the following example: A classifier examines 100 emails and produces these results:
           </p>
 
-          <CompareTable
-            headers={['Actual \\ Predicted', 'Predicted Spam', 'Predicted Not Spam']}
-            rows={[
-              ['Actual Spam', '15 (TP)', '5 (FN)'],
-              ['Actual Not Spam', '10 (FP)', '70 (TN)'],
-            ]}
-          />
-          <p className="text-xs text-[#6D5970] italic">
-            Total observations: 100 emails (20 Actual Spam, 80 Actual Not Spam).
-          </p>
+          {/* Structured Confusion Matrix Visual */}
+          <div className="rounded-2xl border-2 border-[#FFD6E5] bg-white p-4 shadow-sm space-y-3">
+            <div className="text-center">
+              <span className="font-mono text-xs font-bold px-3 py-1 rounded-full bg-[#FFE4EF] text-[#FF2E7E] border border-[#FFB8D2] uppercase tracking-wider">
+                Predicted Class (Model Decision ŷ)
+              </span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-center text-xs md:text-sm">
+                <thead>
+                  <tr className="border-b border-[#F0D6E2]">
+                    <th className="py-2.5 px-3 font-mono text-[11px] text-[#6D5970] text-left">ACTUAL \ PREDICTED</th>
+                    <th className="py-2.5 px-3 font-bold text-[#FF2E7E] bg-rose-50/50 rounded-t-lg">
+                      Predicted Spam (ŷ = 1)
+                    </th>
+                    <th className="py-2.5 px-3 font-bold text-emerald-700 bg-emerald-50/50 rounded-t-lg">
+                      Predicted Not Spam (ŷ = 0)
+                    </th>
+                    <th className="py-2.5 px-3 font-mono text-[11px] text-[#6D5970] bg-[#FFF7FA]">Row Total</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#F0D6E2]">
+                  {/* Row 1: Actual Spam */}
+                  <tr>
+                    <td className="py-3 px-3 font-bold text-[#FF2E7E] text-left bg-rose-50/30">
+                      Actual Spam (y = 1)
+                    </td>
+                    <td className="py-3 px-3 bg-emerald-50 border-2 border-emerald-300 rounded-lg">
+                      <div className="font-extrabold text-2xl text-emerald-800">15</div>
+                      <div className="font-mono text-[11px] font-bold text-emerald-900">True Positive (TP)</div>
+                      <div className="text-[10px] text-emerald-700">Spam correctly caught</div>
+                    </td>
+                    <td className="py-3 px-3 bg-amber-50 border-2 border-amber-300 rounded-lg">
+                      <div className="font-extrabold text-2xl text-amber-800">5</div>
+                      <div className="font-mono text-[11px] font-bold text-amber-900">False Negative (FN)</div>
+                      <div className="text-[10px] text-amber-700">Spam slipped to Inbox</div>
+                    </td>
+                    <td className="py-3 px-3 font-bold text-[#1A1020] bg-[#FFF7FA]">
+                      20 <span className="text-[10px] text-[#6D5970] block font-normal">Actual Spam</span>
+                    </td>
+                  </tr>
+
+                  {/* Row 2: Actual Not Spam */}
+                  <tr>
+                    <td className="py-3 px-3 font-bold text-emerald-700 text-left bg-emerald-50/30">
+                      Actual Not Spam (y = 0)
+                    </td>
+                    <td className="py-3 px-3 bg-rose-50 border-2 border-rose-300 rounded-lg">
+                      <div className="font-extrabold text-2xl text-rose-800">10</div>
+                      <div className="font-mono text-[11px] font-bold text-rose-900">False Positive (FP)</div>
+                      <div className="text-[10px] text-rose-700">Clean marked as Spam!</div>
+                    </td>
+                    <td className="py-3 px-3 bg-emerald-50 border-2 border-emerald-300 rounded-lg">
+                      <div className="font-extrabold text-2xl text-emerald-800">70</div>
+                      <div className="font-mono text-[11px] font-bold text-emerald-900">True Negative (TN)</div>
+                      <div className="text-[10px] text-emerald-700">Clean safely in Inbox</div>
+                    </td>
+                    <td className="py-3 px-3 font-bold text-[#1A1020] bg-[#FFF7FA]">
+                      80 <span className="text-[10px] text-[#6D5970] block font-normal">Actual Clean</span>
+                    </td>
+                  </tr>
+
+                  {/* Bottom Totals */}
+                  <tr className="border-t-2 border-[#F0D6E2] font-semibold text-xs bg-[#FFFDFE]">
+                    <td className="py-2.5 px-3 font-mono text-[11px] text-[#6D5970] text-left">Column Totals</td>
+                    <td className="py-2.5 px-3 text-[#FF2E7E]">
+                      25 <span className="text-[10px] text-[#6D5970]">(Pred. Spam)</span>
+                    </td>
+                    <td className="py-2.5 px-3 text-emerald-700">
+                      75 <span className="text-[10px] text-[#6D5970]">(Pred. Clean)</span>
+                    </td>
+                    <td className="py-2.5 px-3 font-extrabold text-[#1A1020] bg-[#FFE4EF]">
+                      100 Total
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* Quick Metrics Calculation Strip */}
+            <div className="p-2.5 rounded-xl bg-[#FFF0F6] border border-[#FFB8D2] flex flex-wrap items-center justify-around text-xs gap-2">
+              <span><strong>Accuracy:</strong> <span className="text-emerald-700 font-bold">85%</span> (85/100)</span>
+              <span className="text-[#F0D6E2]">|</span>
+              <span><strong>Precision:</strong> <span className="text-[#FF2E7E] font-bold">60%</span> (15/25)</span>
+              <span className="text-[#F0D6E2]">|</span>
+              <span><strong>Recall:</strong> <span className="text-amber-700 font-bold">75%</span> (15/20)</span>
+            </div>
+          </div>
         </div>
 
         {/* Explanation */}

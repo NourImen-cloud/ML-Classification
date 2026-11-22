@@ -182,6 +182,10 @@ export default function HomePage() {
             <span className="text-[#FF2E7E]">Machine Learning</span>
           </h1>
 
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#FFF0F6] border border-[#FFB8D2] text-xs font-mono font-bold text-[#FF2E7E]">
+            <span>🎓</span> Presented by Boudjira Imen Nour El Houda
+          </div>
+
           <p className="text-[#4A3B4E] text-base md:text-lg max-w-2xl mx-auto leading-relaxed font-semibold">
             {courseMetadata.subtitle}
           </p>

@@ -859,23 +859,26 @@
           <!-- Hanging Main Wooden Sign -->
           <div style="display: flex; flex-direction: column; align-items: center; margin-top: 0;">
             <!-- Ropes -->
-            <div style="display: flex; justify-content: space-between; width: 680px; height: 110px;">
+            <div style="display: flex; justify-content: space-between; width: 680px; height: 95px;">
               <div class="rope"></div>
               <div class="rope"></div>
             </div>
 
             <!-- Main Plank -->
-            <div class="wood-plank" style="width: 960px; height: 190px; flex-direction: column; padding: 20px 40px;">
+            <div class="wood-plank" style="width: 1040px; height: 215px; flex-direction: column; padding: 20px 40px; justify-content: center;">
               <div class="wood-grain"></div>
               <div class="plank-washer left" style="left: 145px; top: -8px;"></div>
               <div class="plank-washer right" style="right: 145px; top: -8px;"></div>
               
-              <h1 style="font-size: 72px; letter-spacing: 0.05em; line-height: 1.05; text-align: center;">
+              <h1 style="font-size: 68px; letter-spacing: 0.05em; line-height: 1.05; text-align: center;">
                 CLASSIFICATION IN ML
               </h1>
+              <div style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 26px; font-weight: 700; color: #F5C26B; letter-spacing: 0.03em; margin-top: 8px; text-shadow: 0 2px 10px rgba(0,0,0,0.6);">
+                Presented by Boudjira Imen Nour El Houda
+              </div>
               <div style="display: flex; align-items: center; gap: 20px; margin-top: 8px;">
                 <span style="height: 2px; width: 60px; background: rgba(255,255,255,0.4);"></span>
-                <span style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 32px; font-weight: 500; color: #FFDECC; letter-spacing: 0.02em;">
+                <span style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 20px; font-weight: 500; color: #FFDECC; letter-spacing: 0.02em;">
                   Supervised Learning Trail
                 </span>
                 <span style="height: 2px; width: 60px; background: rgba(255,255,255,0.4);"></span>
@@ -883,23 +886,31 @@
             </div>
 
             <!-- Interconnecting Ropes -->
-            <div style="display: flex; justify-content: space-between; width: 500px; height: 45px; margin-top: -6px;">
+            <div style="display: flex; justify-content: space-between; width: 520px; height: 40px; margin-top: -6px;">
               <div class="rope"></div>
               <div class="rope"></div>
             </div>
 
-            <!-- Lower Plank with Brain Icon -->
-            <div class="wood-plank" style="width: 640px; height: 125px; padding: 10px; margin-top: -4px;">
+            <!-- Lower Plank with Presenter Badge & Brain Icon -->
+            <div class="wood-plank" style="width: 680px; height: 110px; padding: 10px 30px; margin-top: -4px; justify-content: center; gap: 22px; align-items: center;">
               <div class="wood-grain"></div>
               <div class="plank-washer left" style="left: 70px; top: -8px;"></div>
               <div class="plank-washer right" style="right: 70px; top: -8px;"></div>
-              <svg style="width: 65px; height: 65px;"><use href="#icon-brain"/></svg>
+              <svg style="width: 55px; height: 55px;"><use href="#icon-brain"/></svg>
+              <div style="text-align: left;">
+                <div style="font-size: 14px; font-family: 'Oswald', sans-serif; letter-spacing: 0.12em; color: #F5C26B; text-transform: uppercase; font-weight: 700;">
+                  Presented by
+                </div>
+                <div style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 24px; font-weight: 700; color: #FFF4EB;">
+                  Boudjira Imen Nour El Houda
+                </div>
+              </div>
             </div>
           </div>
 
           <!-- Campfire at bottom -->
-          <div class="bottom-trail-icons" style="bottom: 75px;">
-            <svg class="campfire-icon" style="width: 90px; height: 90px;"><use href="#icon-campfire"/></svg>
+          <div class="bottom-trail-icons" style="bottom: 70px;">
+            <svg class="campfire-icon" style="width: 85px; height: 85px;"><use href="#icon-campfire"/></svg>
           </div>
         </div>
       </section>
@@ -1841,46 +1852,147 @@
         </div>
 
         <div class="slide-body">
-          <div class="content-area" style="display: flex; gap: 70px; align-items: center;">
-            <div style="flex: 1;">
-              <p class="lead-text">
-                Not all classification mistakes carry the same consequences!
+          <div class="content-area" style="display: flex; gap: 40px; align-items: flex-start; margin-top: 30px;">
+            <!-- Left Explanatory Column -->
+            <div style="width: 440px; flex-shrink: 0;">
+              <p class="lead-text" style="font-size: 30px; line-height: 1.35; margin-bottom: 16px;">
+                Cross-Tabulating Truth vs. Prediction
               </p>
-              <p class="body-paragraph">
-                The 2×2 Confusion Matrix cross-tabulates predicted outcomes against true ground-truth classes.
+              <p class="body-paragraph" style="font-size: 21px; line-height: 1.4; margin-bottom: 18px;">
+                Instead of a single crude accuracy number, the 2×2 Confusion Matrix reveals <em>which specific mistakes</em> your model makes across the dataset.
               </p>
-              <div class="trail-card highlight" style="margin-top: 25px;">
-                <h4 style="color: #FF7B54;">ASYMMETRIC COSTS</h4>
-                <p>
-                  A <strong>False Positive</strong> throws your university acceptance letter or flight confirmation into the Spam folder! That is far worse than an occasional spam email reaching the inbox.
+              
+              <div class="trail-card highlight" style="padding: 16px; margin-bottom: 16px;">
+                <h4 style="color: #FF7B54; font-size: 22px; margin-bottom: 6px;">⚠️ THE ASYMMETRIC COST OF ERRORS</h4>
+                <p style="font-size: 19px; line-height: 1.4;">
+                  • <strong>False Positive (FP):</strong> Clean university acceptance email marked Spam! <em>(Disastrous failure!)</em><br>
+                  • <strong>False Negative (FN):</strong> Unwanted sales pitch reaches Inbox. <em>(Minor nuisance.)</em>
                 </p>
+              </div>
+
+              <div style="padding: 12px 16px; border-radius: 10px; background: rgba(245, 194, 107, 0.15); border: 1px solid rgba(245, 194, 107, 0.4); font-size: 19px; color: #FFDECC;">
+                <strong>Running Example:</strong> 100 Emails evaluated<br>
+                (20 Ground-Truth Spam, 80 Ground-Truth Legitimate)
               </div>
             </div>
 
-            <!-- 2x2 Matrix Table -->
-            <div class="cm-grid">
-              <div></div>
-              <div class="cm-cell cm-header">PREDICTED SPAM</div>
-              <div class="cm-cell cm-header">PREDICTED NOT SPAM</div>
+            <!-- Right Structured Matrix Column -->
+            <div style="flex: 1; max-width: 900px;">
+              <!-- Matrix Card Container -->
+              <div style="background: rgba(17, 38, 33, 0.95); border: 2px solid #3F756B; border-radius: 14px; padding: 20px 24px; box-shadow: 0 15px 35px rgba(0,0,0,0.5);">
+                
+                <!-- Super Header: PREDICTED CLASS -->
+                <div style="text-align: center; margin-bottom: 12px;">
+                  <span style="font-family: 'Oswald', sans-serif; font-size: 22px; font-weight: 700; color: #F5C26B; letter-spacing: 0.1em; text-transform: uppercase; background: rgba(245, 194, 107, 0.15); padding: 4px 24px; border-radius: 20px; border: 1px solid rgba(245, 194, 107, 0.3);">
+                    PREDICTED CLASS (Model Decision ŷ)
+                  </span>
+                </div>
 
-              <div class="cm-cell cm-header">ACTUAL SPAM</div>
-              <div class="cm-cell cm-tp">
-                <span style="font-size: 26px; font-weight: 800; color: #FFF;">TRUE POSITIVE (TP)</span>
-                <span style="font-size: 19px; color: #C8E6C9; margin-top: 6px;">Spam caught correctly</span>
-              </div>
-              <div class="cm-cell cm-fn">
-                <span style="font-size: 26px; font-weight: 800; color: #FFF;">FALSE NEGATIVE (FN)</span>
-                <span style="font-size: 19px; color: #FFCDD2; margin-top: 6px;">Spam slipped into Inbox</span>
-              </div>
+                <!-- 2x2 Matrix Table with Row & Column Totals -->
+                <table style="width: 100%; border-collapse: separate; border-spacing: 10px; table-layout: fixed;">
+                  <thead>
+                    <tr>
+                      <th style="width: 22%; font-family: 'Oswald', sans-serif; font-size: 18px; color: #A89F94; text-align: left; padding: 6px;">
+                        ACTUAL \ PREDICTED
+                      </th>
+                      <th style="width: 31%; background: rgba(245, 194, 107, 0.12); border: 1px solid rgba(245, 194, 107, 0.3); border-radius: 8px; padding: 10px; text-align: center; font-family: 'Oswald', sans-serif; font-size: 20px; color: #FFA080;">
+                        PREDICTED SPAM<br><span style="font-size: 14px; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 400; color: #FFDECC;">Positive (ŷ = 1)</span>
+                      </th>
+                      <th style="width: 31%; background: rgba(81, 110, 93, 0.2); border: 1px solid rgba(81, 110, 93, 0.4); border-radius: 8px; padding: 10px; text-align: center; font-family: 'Oswald', sans-serif; font-size: 20px; color: #81C784;">
+                        PREDICTED NOT SPAM<br><span style="font-size: 14px; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 400; color: #FFDECC;">Negative (ŷ = 0)</span>
+                      </th>
+                      <th style="width: 16%; background: rgba(255,255,255,0.06); border-radius: 8px; padding: 10px; text-align: center; font-family: 'Oswald', sans-serif; font-size: 18px; color: #A89F94;">
+                        ROW TOTALS
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <!-- Row 1: Actual Spam -->
+                    <tr>
+                      <td style="background: rgba(245, 194, 107, 0.12); border: 1px solid rgba(245, 194, 107, 0.3); border-radius: 8px; padding: 12px; font-family: 'Oswald', sans-serif; font-size: 20px; color: #FFA080; text-align: center;">
+                        ACTUAL SPAM<br>
+                        <span style="font-size: 14px; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 400; color: #FFDECC;">Positive (y = 1)</span>
+                      </td>
+                      
+                      <!-- Cell: True Positive (TP) -->
+                      <td style="background: rgba(43, 140, 128, 0.35); border: 2px solid #2B8C80; border-radius: 10px; padding: 14px; text-align: center;">
+                        <div style="font-size: 38px; font-weight: 900; color: #69F0AE; line-height: 1; font-family: 'Plus Jakarta Sans', sans-serif;">15</div>
+                        <div style="font-size: 18px; font-weight: 800; color: #FFF; margin-top: 4px; font-family: 'Oswald', sans-serif; letter-spacing: 0.05em;">TRUE POSITIVE (TP)</div>
+                        <div style="font-size: 14px; color: #C8E6C9; margin-top: 2px;">Spam caught correctly</div>
+                      </td>
 
-              <div class="cm-cell cm-header">ACTUAL NOT SPAM</div>
-              <div class="cm-cell cm-fp">
-                <span style="font-size: 26px; font-weight: 800; color: #FFF;">FALSE POSITIVE (FP)</span>
-                <span style="font-size: 19px; color: #FFCDD2; margin-top: 6px;">Clean email marked Spam!</span>
-              </div>
-              <div class="cm-cell cm-tn">
-                <span style="font-size: 26px; font-weight: 800; color: #FFF;">TRUE NEGATIVE (TN)</span>
-                <span style="font-size: 19px; color: #C8E6C9; margin-top: 6px;">Clean email safe in Inbox</span>
+                      <!-- Cell: False Negative (FN) -->
+                      <td style="background: rgba(245, 194, 107, 0.22); border: 2px solid #F5C26B; border-radius: 10px; padding: 14px; text-align: center;">
+                        <div style="font-size: 38px; font-weight: 900; color: #FFE082; line-height: 1; font-family: 'Plus Jakarta Sans', sans-serif;">5</div>
+                        <div style="font-size: 18px; font-weight: 800; color: #FFF; margin-top: 4px; font-family: 'Oswald', sans-serif; letter-spacing: 0.05em;">FALSE NEGATIVE (FN)</div>
+                        <div style="font-size: 14px; color: #FFE082; margin-top: 2px;">Spam slipped into Inbox</div>
+                      </td>
+
+                      <!-- Row 1 Total -->
+                      <td style="background: rgba(255,255,255,0.06); border-radius: 8px; padding: 10px; text-align: center;">
+                        <div style="font-size: 26px; font-weight: 800; color: #FFA080;">20</div>
+                        <div style="font-size: 13px; color: #A89F94;">Actual Spam</div>
+                      </td>
+                    </tr>
+
+                    <!-- Row 2: Actual Not Spam -->
+                    <tr>
+                      <td style="background: rgba(81, 110, 93, 0.2); border: 1px solid rgba(81, 110, 93, 0.4); border-radius: 8px; padding: 12px; font-family: 'Oswald', sans-serif; font-size: 20px; color: #81C784; text-align: center;">
+                        ACTUAL NOT SPAM<br>
+                        <span style="font-size: 14px; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 400; color: #FFDECC;">Negative (y = 0)</span>
+                      </td>
+
+                      <!-- Cell: False Positive (FP) -->
+                      <td style="background: rgba(232, 93, 54, 0.35); border: 2px solid #E85D36; border-radius: 10px; padding: 14px; text-align: center;">
+                        <div style="font-size: 38px; font-weight: 900; color: #FF8A80; line-height: 1; font-family: 'Plus Jakarta Sans', sans-serif;">10</div>
+                        <div style="font-size: 18px; font-weight: 800; color: #FFF; margin-top: 4px; font-family: 'Oswald', sans-serif; letter-spacing: 0.05em;">FALSE POSITIVE (FP)</div>
+                        <div style="font-size: 14px; color: #FFCDD2; margin-top: 2px;">Clean email sent to Spam!</div>
+                      </td>
+
+                      <!-- Cell: True Negative (TN) -->
+                      <td style="background: rgba(43, 140, 128, 0.35); border: 2px solid #2B8C80; border-radius: 10px; padding: 14px; text-align: center;">
+                        <div style="font-size: 38px; font-weight: 900; color: #69F0AE; line-height: 1; font-family: 'Plus Jakarta Sans', sans-serif;">70</div>
+                        <div style="font-size: 18px; font-weight: 800; color: #FFF; margin-top: 4px; font-family: 'Oswald', sans-serif; letter-spacing: 0.05em;">TRUE NEGATIVE (TN)</div>
+                        <div style="font-size: 14px; color: #C8E6C9; margin-top: 2px;">Clean email safe in Inbox</div>
+                      </td>
+
+                      <!-- Row 2 Total -->
+                      <td style="background: rgba(255,255,255,0.06); border-radius: 8px; padding: 10px; text-align: center;">
+                        <div style="font-size: 26px; font-weight: 800; color: #81C784;">80</div>
+                        <div style="font-size: 13px; color: #A89F94;">Actual Clean</div>
+                      </td>
+                    </tr>
+
+                    <!-- Bottom Totals Row -->
+                    <tr>
+                      <td style="background: rgba(255,255,255,0.06); border-radius: 8px; padding: 8px; font-family: 'Oswald', sans-serif; font-size: 17px; color: #A89F94; text-align: center;">
+                        COLUMN TOTALS
+                      </td>
+                      <td style="background: rgba(255,255,255,0.06); border-radius: 8px; padding: 8px; text-align: center;">
+                        <span style="font-size: 20px; font-weight: 700; color: #FFA080;">25</span>
+                        <span style="font-size: 13px; color: #A89F94;"> (Predicted Spam)</span>
+                      </td>
+                      <td style="background: rgba(255,255,255,0.06); border-radius: 8px; padding: 8px; text-align: center;">
+                        <span style="font-size: 20px; font-weight: 700; color: #81C784;">75</span>
+                        <span style="font-size: 13px; color: #A89F94;"> (Predicted Clean)</span>
+                      </td>
+                      <td style="background: rgba(245, 194, 107, 0.2); border: 1px solid rgba(245, 194, 107, 0.5); border-radius: 8px; padding: 8px; text-align: center;">
+                        <span style="font-size: 22px; font-weight: 900; color: #F5C26B;">100</span>
+                        <span style="font-size: 12px; display: block; color: #FFDECC;">Grand Total</span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+
+                <!-- Bottom Metric Formula Summary Strip -->
+                <div style="margin-top: 14px; padding: 10px 16px; border-radius: 8px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-around; font-size: 18px; color: #FFF4EB; font-family: 'Plus Jakarta Sans', sans-serif;">
+                  <div><strong>Accuracy:</strong> <span style="color: #69F0AE;">85%</span> <span style="font-size: 14px; color: #A89F94;">((15+70)/100)</span></div>
+                  <div style="color: rgba(255,255,255,0.2);">|</div>
+                  <div><strong>Precision:</strong> <span style="color: #FFA080;">60%</span> <span style="font-size: 14px; color: #A89F94;">(15/25)</span></div>
+                  <div style="color: rgba(255,255,255,0.2);">|</div>
+                  <div><strong>Recall:</strong> <span style="color: #FFE082;">75%</span> <span style="font-size: 14px; color: #A89F94;">(15/20)</span></div>
+                </div>
+
               </div>
             </div>
           </div>

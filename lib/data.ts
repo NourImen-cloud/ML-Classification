@@ -33,6 +33,7 @@ export const newEmails = [
 export const courseMetadata = {
   title: 'Classification in Machine Learning',
   subtitle: 'From understanding the problem to understanding how machines learn to assign categories.',
+  presenter: 'Boudjira Imen Nour El Houda',
   level: 'Computer Science · Introductory level · Supervised learning',
   referenceTitle: 'Module 00: Introduction to Machine Learning | CMSC 173',
   referenceImageUrl:
