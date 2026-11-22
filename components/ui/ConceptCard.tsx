@@ -184,13 +184,8 @@ export function TipPresenter({ children }: { children: ReactNode }) {
   return <KeyInsight>{children}</KeyInsight>;
 }
 
+import { KatexFormula } from './KatexFormula';
+
 export function MathFormula({ formula, label }: { formula: string; label?: string }) {
-  return (
-    <div className="my-4 flex flex-col items-center gap-1.5">
-      {label && <p className="text-[#6D5970] text-xs uppercase font-bold tracking-wider">{label}</p>}
-      <div className="bg-[#FFF0F6] border border-[#FFB8D2] text-[#96003B] rounded-xl px-6 py-2.5 font-mono text-sm font-semibold shadow-inner">
-        {formula}
-      </div>
-    </div>
-  );
+  return <KatexFormula formula={formula} label={label} />;
 }

@@ -2,54 +2,105 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { lessons, stages, formulaSheet, glossary, misconceptions, scikitLearnCode } from '@/lib/data';
+import {
+  courseParts,
+  courseSlides,
+  formulaSheet,
+  glossary,
+  misconceptions,
+  scikitLearnCode,
+  courseMetadata,
+} from '@/lib/data';
 import PixelMascot from '@/components/landing/PixelMascot';
 import PixelLandscape from '@/components/landing/PixelLandscape';
+import { MathBlock } from '@/components/ui/KatexFormula';
+import { ExternalImageCard } from '@/components/ui/ExternalImageCard';
+import {
+  ExternalLink,
+  Play,
+  BookOpen,
+  Sparkles,
+  Layers,
+  CheckCircle,
+  HelpCircle,
+  ArrowRight,
+  ListOrdered,
+  Cpu,
+  Brain,
+  Sliders,
+} from 'lucide-react';
 
-function LessonCard({ lesson }: { lesson: (typeof lessons)[0] }) {
+function PartCard({ part }: { part: (typeof courseParts)[0] }) {
+  const slides = courseSlides.filter((s) => s.partId === part.id);
+
   return (
-    <Link href={`/lesson/${lesson.id}`} className="group block">
-      <div className="relative rounded-2xl p-5 bg-white border border-[#F0D6E2] hover:border-[#FF2E7E] hover:shadow-lg transition-all duration-200 hover:-translate-y-1 h-full flex flex-col justify-between">
-        <div>
-          {/* Top Header */}
-          <div className="flex items-center justify-between mb-3">
-            <span className="font-pixel text-[10px] px-2.5 py-0.5 rounded-full bg-[#FFE4EF] text-[#FF2E7E] font-bold border border-[#FFB8D2]">
-              MODULE {lesson.module.toString().padStart(2, '0')}
-            </span>
-            <span className="text-[#6D5970] text-xs font-mono font-medium">{lesson.timeRange}</span>
-          </div>
-
-          {/* Stage tag */}
-          <div className="text-[10px] font-mono font-bold text-[#8B5CF6] uppercase tracking-wider mb-1">
-            Stage {lesson.stage} · {lesson.stageName}
-          </div>
-
-          {/* Title & Subtitle */}
-          <h3 className="font-bold text-[#1A1020] text-base mb-1.5 group-hover:text-[#FF2E7E] transition-colors leading-snug">
-            {lesson.title}
-          </h3>
-          <p className="text-[#6D5970] text-xs leading-relaxed">{lesson.subtitle}</p>
-        </div>
-
-        {/* Bottom indicator */}
-        <div className="mt-4 pt-3 border-t border-[#F7EAF0] flex items-center justify-between">
-          <span className="text-[11px] font-mono text-[#6D5970]">{lesson.duration} min</span>
-          <span className="text-xs font-bold text-[#FF2E7E] opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-            <span>Start</span>
-            <span>→</span>
+    <div className="group relative rounded-2xl p-6 bg-white border-2 border-[#F0D6E2] hover:border-[#FF2E7E] hover:shadow-lg transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between">
+      <div>
+        {/* Top Header */}
+        <div className="flex items-center justify-between mb-3">
+          <span
+            className="font-pixel text-[11px] px-3 py-1 rounded-full text-white font-bold"
+            style={{ backgroundColor: part.color }}
+          >
+            {part.partNumber}
+          </span>
+          <span className="text-[#6D5970] text-xs font-mono font-bold bg-[#FFF0F6] px-2.5 py-0.5 rounded-full border border-[#FFB8D2]">
+            {part.slidesRange}
           </span>
         </div>
+
+        {/* Title & Subtitle */}
+        <h3 className="font-extrabold text-[#1A1020] text-lg mb-2 group-hover:text-[#FF2E7E] transition-colors leading-snug">
+          {part.title}
+        </h3>
+        <p className="text-[#6D5970] text-xs leading-relaxed mb-4">
+          {part.subtitle}
+        </p>
+
+        {/* Slide quick list */}
+        <div className="space-y-1.5 pt-3 border-t border-[#F7EAF0]">
+          <span className="text-[10px] font-mono font-bold text-[#FF2E7E] uppercase tracking-wider block mb-1">
+            Included Slides ({slides.length}):
+          </span>
+          {slides.slice(0, 4).map((s) => (
+            <div key={s.id} className="text-xs text-[#4A3B4E] truncate flex items-center gap-1.5">
+              <span className="text-[10px] font-mono text-[#6D5970]">#{s.slideNumber}</span>
+              <span className="truncate">{s.title}</span>
+            </div>
+          ))}
+          {slides.length > 4 && (
+            <div className="text-[11px] font-mono font-semibold text-[#8B5CF6]">
+              + {slides.length - 4} more slides...
+            </div>
+          )}
+        </div>
       </div>
-    </Link>
+
+      {/* Bottom Launch Button */}
+      <div className="mt-5 pt-4 border-t border-[#F7EAF0] flex items-center justify-between">
+        <span className="text-xs font-mono text-[#6D5970]">
+          {part.slidesCount} Classroom Slides
+        </span>
+        <Link
+          href={`/lesson/${part.id}`}
+          className="btn-pink px-4 py-1.5 text-xs font-bold flex items-center gap-1.5 group-hover:shadow-md"
+        >
+          <span>Open {part.partNumber}</span>
+          <span>→</span>
+        </Link>
+      </div>
+    </div>
   );
 }
 
 export default function HomePage() {
-  const [sessionFilter, setSessionFilter] = useState<'all' | 1 | 2>('all');
+  const [activePartFilter, setActivePartFilter] = useState<'all' | number>('all');
   const [activeAppendix, setActiveAppendix] = useState<'formulas' | 'glossary' | 'code' | 'misconceptions' | null>(null);
 
-  const displayedLessons =
-    sessionFilter === 'all' ? lessons : lessons.filter((l) => l.session === sessionFilter);
+  const displayedSlides =
+    activePartFilter === 'all'
+      ? courseSlides
+      : courseSlides.filter((s) => s.partId === activePartFilter);
 
   return (
     <div className="min-h-screen bg-white relative flex flex-col overflow-x-hidden bg-pixel-grid">
@@ -57,8 +108,8 @@ export default function HomePage() {
       <nav className="relative z-30 flex items-center justify-between px-6 py-4 border-b border-[#F0D6E2] bg-white/90 backdrop-blur-md">
         {/* Brand Logo */}
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="w-8 h-8 rounded-lg bg-[#FF2E7E] text-white flex items-center justify-center font-pixel text-xs font-bold shadow-sm group-hover:scale-105 transition-transform">
-            P
+          <div className="w-8 h-8 rounded-lg bg-[#FF2E7E] text-white flex items-center justify-center font-pixel text-xs font-bold shadow-xs group-hover:scale-105 transition-transform">
+            ML
           </div>
           <span className="font-pixel text-lg text-[#1A1020] font-bold tracking-tight">
             Pixel<span className="text-[#FF2E7E]">ML</span>
@@ -67,280 +118,346 @@ export default function HomePage() {
 
         {/* Navigation links */}
         <div className="hidden md:flex items-center gap-8 text-sm font-semibold text-[#1A1020]">
-          <Link href="#modules" className="hover:text-[#FF2E7E] transition-colors">
-            Curriculum
+          <Link href="#parts" className="hover:text-[#FF2E7E] transition-colors">
+            5 Parts
+          </Link>
+          <Link href="#slides" className="hover:text-[#FF2E7E] transition-colors">
+            29 Slides
           </Link>
           <Link href="/playground" className="hover:text-[#FF2E7E] transition-colors">
             Simulators
-          </Link>
-          <Link href="/lesson/6" className="hover:text-[#FF2E7E] transition-colors">
-            Evaluation
-          </Link>
-          <Link href="/lesson/7" className="hover:text-[#FF2E7E] transition-colors">
-            Overfitting
           </Link>
           <button
             onClick={() => setActiveAppendix('formulas')}
             className="hover:text-[#FF2E7E] transition-colors font-semibold"
           >
-            Formulas
+            Formulas Sheet
+          </button>
+          <button
+            onClick={() => setActiveAppendix('glossary')}
+            className="hover:text-[#FF2E7E] transition-colors font-semibold"
+          >
+            Glossary
           </button>
         </div>
 
         {/* Action Button */}
         <div className="flex items-center gap-3">
           <Link
-            href="/lesson/1"
-            className="btn-pink px-5 py-2 text-xs md:text-sm font-bold flex items-center gap-1.5"
+            href="/slides"
+            className="px-4 py-2 text-xs md:text-sm font-bold flex items-center gap-1.5 rounded-xl bg-[#16322C] text-[#FFF4EB] border border-[#2B8C80]/50 hover:bg-[#E85D36] transition-colors shadow-xs"
           >
-            <span>Start Session 1</span>
-            <span>→</span>
+            <span>🌲 Trail Slides Deck</span>
+          </Link>
+          <Link
+            href="/lesson/1"
+            className="btn-pink px-5 py-2 text-xs md:text-sm font-bold flex items-center gap-1.5 shadow-xs"
+          >
+            <Play className="w-3.5 h-3.5 fill-current" />
+            <span>Start Interactive Lesson</span>
           </Link>
         </div>
       </nav>
 
       {/* ─── Hero Section with Pixel Landscape & Mascot ─── */}
-      <section className="relative pt-12 md:pt-16 pb-24 md:pb-32 px-4 text-center overflow-hidden">
+      <section className="relative pt-10 md:pt-16 pb-20 md:pb-28 px-4 text-center overflow-hidden">
         <PixelLandscape />
 
-        <div className="relative z-10 max-w-3xl mx-auto space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FFF0F6] border border-[#FFB8D2] text-[#FF2E7E] font-mono text-xs font-bold mb-2">
-            <span>Teacher’s Guide · 2 × 60-Minute Sessions</span>
+        <div className="relative z-10 max-w-4xl mx-auto space-y-4">
+          {/* Metadata Badges */}
+          <div className="flex flex-wrap items-center justify-center gap-2 mb-2">
+            <span className="px-3 py-1 rounded-full bg-[#FFE4EF] text-[#FF2E7E] font-mono text-xs font-extrabold border border-[#FFB8D2]">
+              Computer Science
+            </span>
+            <span className="px-3 py-1 rounded-full bg-purple-50 text-purple-700 font-mono text-xs font-extrabold border border-purple-200">
+              Introductory Level
+            </span>
+            <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 font-mono text-xs font-extrabold border border-emerald-200">
+              Supervised Learning
+            </span>
           </div>
 
           <h1 className="font-pixel text-3xl sm:text-4xl md:text-5xl text-[#1A1020] tracking-tight leading-tight">
             Classification in<br />
-            Machine Learning
+            <span className="text-[#FF2E7E]">Machine Learning</span>
           </h1>
 
-          <p className="text-[#6D5970] text-sm md:text-base max-w-xl mx-auto leading-relaxed">
-            From first intuition to model evaluation: KNN, Decision Trees, Logistic Regression,
-            metrics, thresholds, and honest generalization.
+          <p className="text-[#4A3B4E] text-base md:text-lg max-w-2xl mx-auto leading-relaxed font-semibold">
+            {courseMetadata.subtitle}
           </p>
 
-          <div className="py-4">
+          {/* Reference Citation Card */}
+          <div className="max-w-xl mx-auto bg-white/90 backdrop-blur-md rounded-2xl border-2 border-[#FFD6E5] p-3.5 shadow-sm text-left flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <img
+                src={courseMetadata.referenceImageUrl}
+                alt="CMSC 173 Cover"
+                className="w-12 h-12 rounded-xl object-cover border border-[#F0D6E2] flex-shrink-0"
+              />
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-[#1A1020] truncate">
+                  {courseMetadata.referenceTitle}
+                </p>
+                <p className="text-[11px] text-[#6D5970] truncate">
+                  Official Course Curriculum Reference
+                </p>
+              </div>
+            </div>
+            <a
+              href={courseMetadata.referencePortalUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-[#FFF0F6] text-[#FF2E7E] border border-[#FFB8D2] hover:bg-[#FFE4EF] transition-colors whitespace-nowrap self-start sm:self-auto"
+            >
+              <span>portal.latarak.com</span>
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
+
+          <div className="py-2">
             <PixelMascot />
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
             <Link
-              href="/lesson/1"
-              className="btn-pink px-6 py-2.5 text-xs md:text-sm font-bold flex items-center gap-2"
+              href="/slides"
+              className="px-6 py-2.5 text-xs md:text-sm font-bold flex items-center gap-2 rounded-xl bg-[#16322C] text-[#FFF4EB] border-2 border-[#E85D36] hover:bg-[#E85D36] transition-all shadow-md hover:scale-105"
             >
-              <span>Begin Module 1 (Discovering Classification)</span>
+              <span>🌲 Trail Slide Deck (National Park Theme)</span>
               <span>→</span>
+            </Link>
+            <Link
+              href="/lesson/1"
+              className="btn-pink px-6 py-2.5 text-xs md:text-sm font-bold flex items-center gap-2 shadow-sm"
+            >
+              <span>Start Interactive Lesson</span>
+              <span>→</span>
+            </Link>
+            <Link
+              href="#slides"
+              className="btn-white px-5 py-2.5 text-xs md:text-sm font-bold flex items-center gap-2"
+            >
+              <span>Browse All 29 Slides</span>
             </Link>
             <Link
               href="/playground"
               className="btn-white px-5 py-2.5 text-xs md:text-sm font-bold flex items-center gap-2"
             >
-              <span>Explore Simulators</span>
+              <span>Interactive Playground</span>
             </Link>
           </div>
         </div>
       </section>
 
-      {/* ─── The Three Learning Stages (Part 4 of Guide) ─── */}
-      <section className="relative py-12 px-4 md:px-8 max-w-5xl mx-auto w-full">
-        <div className="flex items-center justify-between mb-6 pb-2 border-b border-[#F0D6E2]">
+      {/* ─── 5 Parts Curriculum Showcase ─── */}
+      <section id="parts" className="relative py-12 px-4 md:px-8 max-w-6xl mx-auto w-full">
+        <div className="flex items-center justify-between mb-8 pb-3 border-b border-[#F0D6E2]">
           <div>
             <span className="font-pixel text-[10px] uppercase font-bold text-[#FF2E7E] tracking-widest block mb-1">
-              LEARNING DESIGN
+              CURRICULUM STRUCTURE
             </span>
-            <h2 className="text-2xl font-extrabold text-[#1A1020]">
-              The Three Pedagogical Stages
+            <h2 className="text-2xl md:text-3xl font-extrabold text-[#1A1020]">
+              The 5 Comprehensive Parts
             </h2>
           </div>
-          <span className="text-xs font-mono text-[#6D5970]">Stage Checkpoints Included</span>
+          <span className="text-xs font-mono font-bold text-[#6D5970] bg-[#FFF0F6] px-3 py-1 rounded-full border border-[#FFB8D2]">
+            29 Complete Slides
+          </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {stages.map((stage) => (
-            <div
-              key={stage.number}
-              className="rounded-2xl border-2 border-[#F0D6E2] bg-white p-5 shadow-sm space-y-3 flex flex-col justify-between"
-            >
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="font-pixel text-[10px] px-2 py-0.5 rounded-full bg-[#FFE4EF] text-[#FF2E7E] font-bold">
-                    STAGE {stage.number}
-                  </span>
-                  <span className="text-[11px] font-mono text-[#6D5970]">{stage.session}</span>
-                </div>
-                <h3 className="font-extrabold text-base text-[#1A1020]">{stage.title.split('·')[1]}</h3>
-                <p className="text-xs text-[#6D5970] leading-relaxed">{stage.description}</p>
-              </div>
-
-              <div className="p-3 rounded-xl bg-[#FFF9FC] border border-[#FFB8D2] space-y-1 text-xs">
-                <span className="font-bold text-[#FF2E7E] block text-[10px] uppercase tracking-wider">
-                  Checkpoint Question:
-                </span>
-                <p className="text-[#1A1020] font-medium italic">&ldquo;{stage.checkpointQuestion}&rdquo;</p>
-              </div>
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {courseParts.map((part) => (
+            <PartCard key={part.id} part={part} />
           ))}
         </div>
       </section>
 
-      {/* ─── Curriculum Modules Grid ─── */}
-      <section id="modules" className="relative py-12 px-4 md:px-8 max-w-5xl mx-auto w-full">
+      {/* ─── All 29 Slides Index Table ─── */}
+      <section id="slides" className="relative py-12 px-4 md:px-8 max-w-6xl mx-auto w-full">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 pb-3 border-b border-[#F0D6E2] gap-4">
           <div>
             <span className="font-pixel text-[10px] uppercase font-bold text-[#FF2E7E] tracking-widest block mb-1">
-              CURRICULUM ARCHITECTURE
+              SLIDE-BY-SLIDE INDEX
             </span>
-            <h2 className="text-2xl font-extrabold text-[#1A1020]">
-              The 11 Instructional Modules
+            <h2 className="text-2xl md:text-3xl font-extrabold text-[#1A1020]">
+              All 29 Presentation Slides
             </h2>
           </div>
 
-          {/* Session Filters */}
-          <div className="flex items-center gap-1.5 p-1 bg-[#FFF0F6] rounded-xl border border-[#FFB8D2]">
+          {/* Part Filter Pills */}
+          <div className="flex flex-wrap items-center gap-1.5 p-1 bg-[#FFF0F6] rounded-xl border border-[#FFB8D2]">
             <button
-              onClick={() => setSessionFilter('all')}
+              onClick={() => setActivePartFilter('all')}
               className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                sessionFilter === 'all' ? 'bg-[#FF2E7E] text-white shadow-sm' : 'text-[#6D5970]'
+                activePartFilter === 'all' ? 'bg-[#FF2E7E] text-white shadow-xs' : 'text-[#6D5970]'
               }`}
             >
-              All (11 Modules · 120 min)
+              All Slides (29)
             </button>
-            <button
-              onClick={() => setSessionFilter(1)}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                sessionFilter === 1 ? 'bg-[#FF2E7E] text-white shadow-sm' : 'text-[#6D5970]'
-              }`}
-            >
-              Session 1 (M1–M5)
-            </button>
-            <button
-              onClick={() => setSessionFilter(2)}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                sessionFilter === 2 ? 'bg-[#FF2E7E] text-white shadow-sm' : 'text-[#6D5970]'
-              }`}
-            >
-              Session 2 (M6–M11)
-            </button>
+            {courseParts.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => setActivePartFilter(p.id)}
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                  activePartFilter === p.id ? 'bg-[#FF2E7E] text-white shadow-xs' : 'text-[#6D5970]'
+                }`}
+              >
+                {p.partNumber}
+              </button>
+            ))}
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {displayedLessons.map((lesson) => (
-            <LessonCard key={lesson.id} lesson={lesson} />
-          ))}
-        </div>
-
-        {/* Running Example Card */}
-        <div className="mt-10 rounded-2xl border border-[#F0D6E2] bg-white p-6 shadow-sm">
-          <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-xl bg-[#FFF0F6] border border-[#FFB8D2] flex items-center justify-center font-pixel text-sm text-[#FF2E7E] flex-shrink-0 font-bold">
-              01
-            </div>
-            <div className="space-y-1.5">
-              <h3 className="font-extrabold text-base text-[#1A1020]">
-                The Core Running Example: Email Spam Classifier
-              </h3>
-              <p className="text-[#6D5970] text-xs md:text-sm leading-relaxed">
-                Rather than introducing arbitrary toy datasets in every chapter, every concept connects back
-                to a clean, consistent email spam filter. Features are <strong className="text-[#1A1020]">number of links</strong> (x-axis)
-                and <strong className="text-[#1A1020]">suspicious keywords</strong> (y-axis).
-                Observation <strong className="text-[#FF2E7E]">E10</strong> is deliberately placed noise to show how KNN, Decision Trees,
-                and Regularization react to real-world edge cases.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Appendix Reference Drawer Modals */}
-        {activeAppendix && (
-          <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl border-2 border-[#1A1020] max-w-2xl w-full p-6 max-h-[80vh] overflow-y-auto space-y-4 shadow-2xl">
-              <div className="flex items-center justify-between border-b border-[#F0D6E2] pb-3">
-                <span className="font-pixel text-xs text-[#FF2E7E] font-bold uppercase">
-                  {activeAppendix === 'formulas' && 'Appendix A · Formula Reference Sheet'}
-                  {activeAppendix === 'glossary' && 'Appendix C · Glossary of Classification Terms'}
-                  {activeAppendix === 'code' && 'Appendix B · Scikit-Learn Python Implementation'}
-                  {activeAppendix === 'misconceptions' && 'Part 5 · Common Misconceptions to Listen For'}
-                </span>
-                <button
-                  onClick={() => setActiveAppendix(null)}
-                  className="font-bold text-xs text-[#6D5970] hover:text-[#1A1020]"
-                >
-                  ✕ Close
-                </button>
+        {/* Slides Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {displayedSlides.map((slide) => (
+            <Link
+              key={slide.id}
+              href={`/lesson/${slide.partId}#slide-${slide.id}`}
+              className="p-4 rounded-xl border border-[#F0D6E2] bg-white hover:border-[#FF2E7E] hover:shadow-md transition-all flex flex-col justify-between group"
+            >
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-pixel text-[10px] px-2 py-0.5 rounded-full bg-[#FFE4EF] text-[#FF2E7E] font-bold">
+                    SLIDE {slide.slideNumber.toString().padStart(2, '0')}
+                  </span>
+                  <span className="text-[10px] font-mono font-bold text-[#8B5CF6]">
+                    {slide.partName}
+                  </span>
+                </div>
+                <h4 className="font-bold text-sm text-[#1A1020] group-hover:text-[#FF2E7E] transition-colors line-clamp-2">
+                  {slide.title}
+                </h4>
               </div>
 
-              {activeAppendix === 'formulas' && (
-                <div className="space-y-2 text-xs">
-                  {formulaSheet.map((f, i) => (
-                    <div key={i} className="p-3 bg-[#FFF9FC] rounded-xl border border-[#F0D6E2] space-y-1">
-                      <div className="font-bold text-[#1A1020]">{f.concept}</div>
-                      <div className="font-mono text-[#96003B] bg-white p-1.5 rounded border border-[#FFB8D2]">
-                        {f.formula}
-                      </div>
-                      <div className="text-[#6D5970] text-[11px]">{f.desc}</div>
-                    </div>
-                  ))}
+              <div className="mt-3 pt-2 border-t border-[#F7EAF0] flex items-center justify-between text-[11px]">
+                <div className="flex items-center gap-1">
+                  {slide.hasInteractiveVisual && (
+                    <span className="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[10px] font-mono font-bold border border-emerald-200">
+                      Visual
+                    </span>
+                  )}
+                  {slide.hasFormulas && (
+                    <span className="px-1.5 py-0.5 rounded bg-purple-50 text-purple-700 text-[10px] font-mono font-bold border border-purple-200">
+                      KaTeX
+                    </span>
+                  )}
+                  {slide.hasExternalImage && (
+                    <span className="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 text-[10px] font-mono font-bold border border-blue-200">
+                      Image
+                    </span>
+                  )}
                 </div>
-              )}
-
-              {activeAppendix === 'glossary' && (
-                <div className="space-y-2 text-xs">
-                  {glossary.map((g, i) => (
-                    <div key={i} className="p-3 bg-white rounded-xl border border-[#F0D6E2]">
-                      <span className="font-bold text-[#FF2E7E] block mb-0.5">{g.term}</span>
-                      <p className="text-[#4A3B4E]">{g.meaning}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {activeAppendix === 'misconceptions' && (
-                <div className="space-y-2.5 text-xs">
-                  {misconceptions.map((m, i) => (
-                    <div key={i} className="p-3 bg-white rounded-xl border border-[#FED7AA] space-y-1">
-                      <span className="font-bold text-[#DC2626] block">Myth: &ldquo;{m.myth}&rdquo;</span>
-                      <p className="text-[#059669] font-medium">Correction: {m.correction}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+                <span className="font-bold text-[#FF2E7E] opacity-0 group-hover:opacity-100 transition-opacity">
+                  Open →
+                </span>
+              </div>
+            </Link>
+          ))}
+        </div>
       </section>
 
-      {/* ─── Footer ─── */}
-      <footer className="border-t border-[#F0D6E2] py-8 px-6 bg-white text-center text-xs text-[#6D5970]">
-        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <span className="font-pixel text-[#FF2E7E] font-bold">PixelML</span>
-            <span>·</span>
-            <span>Classification in Machine Learning · Teacher&apos;s Guide</span>
-          </div>
-          <div className="flex items-center gap-4 font-medium">
-            <button
-              onClick={() => setActiveAppendix('formulas')}
-              className="hover:text-[#FF2E7E] transition-colors"
+      {/* ─── 10 Core Memory Takeaways ─── */}
+      <section className="relative py-12 px-4 md:px-8 max-w-6xl mx-auto w-full">
+        <div className="p-6 md:p-8 rounded-3xl border-2 border-[#FFD6E5] bg-[#FFF7FA] shadow-sm space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#FFD6E5] pb-4">
+            <div>
+              <span className="font-pixel text-[10px] uppercase font-bold text-[#FF2E7E] tracking-widest block mb-1">
+                SUMMARY & TAKEAWAYS · SLIDE 28
+              </span>
+              <h2 className="text-xl md:text-2xl font-extrabold text-[#1A1020]">
+                What Should You Remember? 10 Core ML Concepts
+              </h2>
+            </div>
+            <Link
+              href="/lesson/5#slide-28"
+              className="btn-pink px-4 py-1.5 text-xs font-bold inline-flex items-center gap-1 self-start sm:self-auto"
             >
-              Formula Sheet
-            </button>
-            <button
-              onClick={() => setActiveAppendix('glossary')}
-              className="hover:text-[#FF2E7E] transition-colors"
-            >
-              Glossary
-            </button>
-            <button
-              onClick={() => setActiveAppendix('misconceptions')}
-              className="hover:text-[#FF2E7E] transition-colors"
-            >
-              Misconceptions
-            </button>
-            <Link href="/playground" className="hover:text-[#FF2E7E] transition-colors">
-              Simulators
+              <span>View in Part V</span>
+              <span>→</span>
             </Link>
           </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 text-xs">
+            {glossary.map((g, idx) => (
+              <div key={g.term} className="p-3 bg-white rounded-xl border border-[#F0D6E2] space-y-1 shadow-xs">
+                <span className="font-mono text-[10px] text-[#FF2E7E] font-bold block">
+                  0{idx + 1}. {g.term}
+                </span>
+                <p className="text-[#4A3B4E] leading-relaxed text-[11px]">{g.meaning}</p>
+              </div>
+            ))}
+          </div>
         </div>
+      </section>
+
+      {/* ─── Drawer Modal for Formulas / Glossary / Code ─── */}
+      {activeAppendix && (
+        <div
+          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex justify-end animate-fadeIn"
+          onClick={() => setActiveAppendix(null)}
+        >
+          <div
+            className="w-full max-w-xl bg-white h-full shadow-2xl p-6 overflow-y-auto space-y-4 border-l border-[#F0D6E2]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-[#F0D6E2]">
+              <span className="font-pixel text-xs text-[#FF2E7E] uppercase font-bold tracking-wider">
+                {activeAppendix === 'formulas' && 'All Course Mathematical Formulas'}
+                {activeAppendix === 'glossary' && '10 Core Terminology Concepts'}
+                {activeAppendix === 'code' && 'Production Scikit-Learn Pipeline'}
+              </span>
+              <button
+                onClick={() => setActiveAppendix(null)}
+                className="text-xs font-bold text-[#6D5970] hover:text-[#1A1020] px-2.5 py-1 rounded bg-[#FFF0F6] hover:bg-[#FFE4EF]"
+              >
+                ✕ Close
+              </button>
+            </div>
+
+            {/* Formulas Sheet */}
+            {activeAppendix === 'formulas' && (
+              <div className="space-y-4 text-xs">
+                <p className="text-[#6D5970]">
+                  Every formula from the 29 slides rendered with KaTeX:
+                </p>
+                <div className="space-y-3">
+                  {formulaSheet.map((f, i) => (
+                    <div key={i} className="p-3 bg-[#FFF7FA] rounded-xl border border-[#FFD6E5] space-y-1">
+                      <span className="font-bold text-[#1A1020] block text-xs font-mono">{f.concept}</span>
+                      <MathBlock formula={f.formula} />
+                      <p className="text-[11px] text-[#6D5970]">{f.desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Glossary */}
+            {activeAppendix === 'glossary' && (
+              <div className="space-y-3 text-xs">
+                {glossary.map((g, i) => (
+                  <div key={i} className="p-3 bg-white rounded-xl border border-[#F0D6E2] space-y-1">
+                    <span className="font-bold text-[#FF2E7E] block font-mono text-xs">
+                      {i + 1}. {g.term}
+                    </span>
+                    <p className="text-[#4A3B4E] leading-relaxed">{g.meaning}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ─── Footer ─── */}
+      <footer className="mt-auto border-t border-[#F0D6E2] bg-white py-8 px-6 text-center text-xs text-[#6D5970] space-y-2">
+        <p className="font-pixel text-[#1A1020]">
+          Classification in Machine Learning · Computer Science Curriculum
+        </p>
+        <p className="font-mono text-[11px]">
+          Adapted from {courseMetadata.referenceTitle}
+        </p>
       </footer>
     </div>
   );

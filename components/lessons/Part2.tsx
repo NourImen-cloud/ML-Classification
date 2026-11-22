@@ -1,419 +1,491 @@
 'use client';
 
-import { useState } from 'react';
+import React from 'react';
 import {
   SectionHeader,
-  ThoughtPrompt,
   CompareTable,
   Callout,
   KeyInsight,
-  MathFormula,
 } from '@/components/ui/ConceptCard';
-import { Quiz } from '@/components/ui/Quiz';
-import { module2Emails } from '@/lib/data';
-
-const workflowSteps = [
-  ['1. Define the problem', 'What exactly are we predicting? What are the classes?'],
-  ['2. Collect and label data', 'Is the data representative of real-world inputs? Who labeled it?'],
-  ['3. Explore and prepare', 'Are there missing values, duplicates, outliers, or mislabeled rows?'],
-  ['4. Select and represent features', 'Does each feature carry predictive signal about the target? Convert text/cats to numbers.'],
-  ['5. Split the data', 'Partition into training (70%), validation (15%), and test (15%) sets.'],
-  ['6. Train a classifier', 'Which algorithm to select (KNN, Tree, Logistic Regression)? Which hyperparameters?'],
-  ['7. Evaluate', 'Which metric matches the real-world cost of mistakes? Compute Confusion Matrix.'],
-  ['8. Improve if necessary', 'Collect more data, engineer better features, or tune hyperparameters.'],
-  ['9. Predict new observations', 'Deploy model into production and monitor for distribution drift.'],
-];
-
-const identifyDataTasks = [
-  {
-    problem: 'Flower identification',
-    features: 'Petal length, petal width, sepal length, sepal width',
-    target: 'Flower species (e.g. Setosa, Versicolor, Virginica)',
-  },
-  {
-    problem: 'Spam email detection',
-    features: 'Hyperlink count, suspicious keywords, exclamation marks, sender reputation',
-    target: 'Spam status (Spam vs. Not Spam)',
-  },
-  {
-    problem: 'Student course performance',
-    features: 'Lecture attendance rate, hours of weekly study, homework completion rate',
-    target: 'Course outcome (Pass vs. Fail)',
-  },
-];
+import { MathBlock, MathInline } from '@/components/ui/KatexFormula';
+import { ExternalImageCard } from '@/components/ui/ExternalImageCard';
+import { DecisionBoundaryScatterPlot } from '@/components/interactive/CurriculumVisuals';
+import {
+  Sparkles,
+  GitBranch,
+  Layers,
+  Scale,
+  Activity,
+  AlertCircle,
+  HelpCircle,
+} from 'lucide-react';
 
 export default function Part2() {
-  const [selectedEmail, setSelectedEmail] = useState<string | null>('B');
-  const [showOneHotDemo, setShowOneHotDemo] = useState(false);
-  const [revealedTasks, setRevealedTasks] = useState<Record<number, boolean>>({});
-
   return (
-    <div className="max-w-4xl mx-auto px-4 md:px-6 py-6 space-y-10">
+    <div className="max-w-4xl mx-auto px-4 md:px-6 py-6 space-y-12">
+      {/* ─── Part Header ─── */}
       <SectionHeader
         part={2}
-        time="Session 1 · 8–18 min"
-        title="Understanding the Data"
-        subtitle="Features, Labels, Supervised Learning & the 9-Step ML Workflow"
+        time="Part II · Slides 12–17"
+        title="Part II — Understanding how classification decisions are made"
+        subtitle="Geometric feature spaces, decision boundaries, class overlap, probabilities, and core algorithms."
       />
 
-      <Callout type="info" title="Teacher Note: The Foundation of Classification">
-        This module is extremely important. If students do not clearly understand features, labels,
-        and the distinction between training and prediction, the algorithms will feel like arbitrary,
-        unrelated mathematical tricks.
-      </Callout>
-
-      {/* 2.1 What does a dataset look like? */}
-      <section className="space-y-4">
-        <div>
-          <span className="font-pixel text-[10px] uppercase font-bold text-[#FF2E7E] tracking-wider block mb-1">
-            SECTION 2.1
-          </span>
-          <h2 className="text-xl font-extrabold text-[#1A1020]">
-            What Does a Dataset Look Like?
-          </h2>
-        </div>
-
-        <p className="text-sm text-[#4A3B4E] leading-relaxed">
-          A machine learning model does not read an email the way a human does. We must represent each
-          observation with structured, quantitative measurements the algorithm can process.
-        </p>
-
-        {/* 6-Email Matrix Table */}
-        <div className="overflow-x-auto rounded-2xl border-2 border-[#FFD6E5] bg-white shadow-sm">
-          <table className="w-full border-collapse text-left text-xs md:text-sm">
-            <thead>
-              <tr className="bg-[#FFE4EF] border-b-2 border-[#FFB8D2] text-[#96003B] font-mono text-xs uppercase">
-                <th className="py-3 px-3">Email ID</th>
-                <th className="py-3 px-3">Contains Link (x₁)</th>
-                <th className="py-3 px-3">Suspicious Words (x₂)</th>
-                <th className="py-3 px-3">Exclamation Marks (x₃)</th>
-                <th className="py-3 px-3">Class (y)</th>
-                <th className="py-3 px-3 font-bold">Encoded y</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#F7EAF0]">
-              {module2Emails.map((email) => (
-                <tr
-                  key={email.id}
-                  onClick={() => setSelectedEmail(email.id)}
-                  className={`cursor-pointer transition-colors ${
-                    selectedEmail === email.id ? 'bg-[#FFE4EF]/60 font-semibold' : 'hover:bg-[#FFF7FA]'
-                  }`}
-                >
-                  <td className="py-3 px-3 font-bold font-mono text-[#1A1020]">
-                    Email {email.id}
-                    <span className="block text-[10px] text-[#6D5970] font-normal">Identifier (ID)</span>
-                  </td>
-                  <td className="py-3 px-3 font-mono text-[#2D1F33]">{email.containsLink}</td>
-                  <td className="py-3 px-3 font-mono text-[#2D1F33]">{email.suspiciousWords}</td>
-                  <td className="py-3 px-3 font-mono text-[#2D1F33]">{email.exclamationMarks}</td>
-                  <td className="py-3 px-3 font-semibold">
-                    <span
-                      className={`px-2 py-0.5 rounded-full text-[11px] font-mono ${
-                        email.label === 'Spam'
-                          ? 'bg-[#FFE4EF] text-[#FF2E7E] border border-[#FFB8D2]'
-                          : 'bg-[#ECFDF5] text-[#059669] border border-[#A7F3D0]'
-                      }`}
-                    >
-                      {email.label}
-                    </span>
-                  </td>
-                  <td className="py-3 px-3 font-mono font-bold text-[#1A1020]">{email.encoded}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
-          <div className="p-3.5 rounded-xl border border-[#F0D6E2] bg-white">
-            <span className="font-bold text-[#1A1020] block mb-1">Email ID</span>
-            <p className="text-[#6D5970]">
-              Identifies the observation. It is an index/ID, <strong>not a feature</strong>. A model should never use IDs to predict!
-            </p>
-          </div>
-          <div className="p-3.5 rounded-xl border border-[#F0D6E2] bg-white">
-            <span className="font-bold text-[#1A1020] block mb-1">Features (x₁, x₂, x₃)</span>
-            <p className="text-[#6D5970]">
-              Measurable attributes: presence of links, count of spam keywords, exclamation frequency.
-            </p>
-          </div>
-          <div className="p-3.5 rounded-xl border border-[#F0D6E2] bg-white">
-            <span className="font-bold text-[#1A1020] block mb-1">Class Label (y)</span>
-            <p className="text-[#6D5970]">
-              The target ground truth we want the algorithm to learn to predict: Spam (1) or Not Spam (0).
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* 2.2 Features versus labels */}
-      <section className="space-y-4">
-        <div>
-          <span className="font-pixel text-[10px] uppercase font-bold text-[#FF2E7E] tracking-wider block mb-1">
-            SECTION 2.2
-          </span>
-          <h2 className="text-xl font-extrabold text-[#1A1020]">
-            Features versus Labels: Matrix Form
-          </h2>
-        </div>
-
-        <p className="text-sm text-[#4A3B4E] leading-relaxed">
-          Mathematically, our six emails form an <code className="bg-[#FFF0F6] px-1.5 py-0.5 rounded text-[#96003B]">n × d</code> feature
-          matrix <code className="bg-[#FFF0F6] px-1.5 py-0.5 rounded text-[#96003B]">X</code> (with 6 rows and 3 columns)
-          and a target column vector <code className="bg-[#FFF0F6] px-1.5 py-0.5 rounded text-[#96003B]">y</code>:
-        </p>
-
-        <MathFormula formula="X \in \mathbb{R}^{6 \times 3} = \begin{bmatrix} 0 & 0 & 0 \\ 1 & 1 & 3 \\ 0 & 0 & 1 \\ 1 & 2 & 4 \\ 0 & 1 & 0 \\ 1 & 3 & 5 \end{bmatrix}, \qquad y = \begin{bmatrix} 0 \\ 1 \\ 0 \\ 1 \\ 0 \\ 1 \end{bmatrix}" />
-
-        <Callout type="info" title="Teacher Note: Binary Encoding Convention">
-          Not Spam = 0 and Spam = 1 is an encoding convention. The computer does not inherently know
-          that &ldquo;1&rdquo; means spam or something undesirable; it only sees numeric indices.
-        </Callout>
-
-        {/* Improvement Added: One-hot encoding */}
-        <div className="rounded-2xl border border-[#F0D6E2] bg-white p-5 shadow-sm space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="font-pixel text-[10px] text-[#059669] font-bold px-2 py-0.5 rounded bg-[#DCFCE7] border border-[#A7F3D0]">
-              IMPROVEMENT ADDED · CATEGORICAL FEATURES
+      {/* ─────────────────────────────────────────────────────────────
+          SLIDE 12 — How does a classifier distinguish between classes?
+         ───────────────────────────────────────────────────────────── */}
+      <section id="slide-12" className="space-y-5 rounded-2xl border-2 border-[#F0D6E2] bg-white p-6 shadow-xs">
+        <div className="flex items-center justify-between border-b border-[#F0D6E2] pb-3">
+          <div className="flex items-center gap-2.5">
+            <span className="font-pixel text-xs px-2.5 py-1 rounded-full bg-[#FFE4EF] text-[#8B5CF6] font-bold border border-[#FFB8D2]">
+              SLIDE 12
             </span>
-            <button
-              onClick={() => setShowOneHotDemo((p) => !p)}
-              className="text-xs font-bold text-[#FF2E7E] hover:underline"
-            >
-              {showOneHotDemo ? 'Hide encoding demo' : 'Show One-Hot Encoding example'}
-            </button>
+            <h2 className="text-xl md:text-2xl font-extrabold text-[#1A1020]">
+              How does a classifier distinguish between classes?
+            </h2>
           </div>
-          <p className="text-xs text-[#4A3B4E] leading-relaxed">
-            Features can be numerical or categorical. For example, <em>Sender Reputation</em> might be
-            categorized as <code className="bg-[#FFF0F6] px-1 rounded">&ldquo;known&rdquo;</code> or{' '}
-            <code className="bg-[#FFF0F6] px-1 rounded">&ldquo;unknown&rdquo;</code>. Algorithms require numerical
-            matrices, so categories must be transformed (e.g. One-Hot Encoding: known = [1, 0], unknown = [0, 1]).
+          <span className="text-xs font-mono font-semibold text-[#6D5970] bg-[#FFF0F6] px-2.5 py-1 rounded-full border border-[#FFB8D2]">
+            Decision Boundaries
+          </span>
+        </div>
+
+        {/* Slide Content */}
+        <div className="space-y-3 text-sm text-[#4A3B4E] leading-relaxed">
+          <p>
+            Imagine plotting our spam detection dataset on a graph.
+          </p>
+          <p>We have two features:</p>
+          <ul className="list-disc pl-5 space-y-1 text-xs font-mono text-[#1A1020]">
+            <li>Horizontal axis: Number of links.</li>
+            <li>Vertical axis: Number of suspicious words.</li>
+          </ul>
+          <p>
+            Each email becomes a point in a two-dimensional space. Emails labeled <span className="text-[#FF2E7E] font-bold">Spam</span> can be represented using red points, while emails labeled <span className="text-blue-600 font-bold">Not Spam</span> can be represented using blue points.
           </p>
 
-          {showOneHotDemo && (
-            <div className="p-3 bg-[#FFF7FA] rounded-xl border border-[#FFD6E5] text-xs font-mono space-y-1">
-              <div>Sender = &quot;known&quot;   → [sender_known: 1, sender_unknown: 0]</div>
-              <div>Sender = &quot;unknown&quot; → [sender_known: 0, sender_unknown: 1]</div>
+          <ExternalImageCard
+            src="https://images.openai.com/static-rsc-4/tMIcIgC1g9gTG-yXMVi5QNdS-U4cQdeRGCoM36izzinlbhRNzF-F25_7Ji1cKbr81kz-9xw6mhjrShp93WLFZoCjhuAZnVY6z3NmF_YoD2pxVFMVcL6aPJWu69I2K2nZHnxyV8ynOZ6069EC8gkOdnFc91YhPx_C1B4YSAoO9u8?purpose=inline"
+            title="Supervised Learning Slide Deck by Nipun Batra"
+            sourceUrl="https://nipunbatra.github.io/principles-ai-teaching/lectures/03-supervised-learning/slides.html?utm_source=chatgpt.com"
+            sourceLabel="nipunbatra.github.io"
+            caption="Visualizing 2D labeled samples and separating decision surfaces."
+          />
+
+          <div className="p-4 rounded-xl border-2 border-[#FFD6E5] bg-[#FFF7FA] space-y-2">
+            <h4 className="font-bold text-sm text-[#96003B]">Definition of Decision Boundary</h4>
+            <p className="text-xs md:text-sm text-[#4A3B4E] leading-relaxed">
+              A classification model attempts to learn a decision rule that helps distinguish observations belonging to different classes. When the data can be represented geometrically, this rule can be visualized as a <strong>decision boundary</strong>.
+            </p>
+            <p className="text-xs font-semibold text-[#1A1020]">
+              A <strong>decision boundary</strong> is the boundary in the feature space that separates regions assigned to different predicted classes.
+            </p>
+          </div>
+        </div>
+
+        {/* Interactive Scatter Plot Visual */}
+        <DecisionBoundaryScatterPlot />
+
+        {/* Explanation */}
+        <Callout type="info" title="Explanation">
+          <div className="space-y-2 text-xs md:text-sm">
+            <p>
+              Imagine that we have plotted all our training emails. We can observe that many spam emails have a relatively high number of links and suspicious words, while many legitimate emails have lower values.
+            </p>
+            <p>
+              A classifier can use these patterns to determine which regions of the feature space are associated with each class. When a new email arrives, we represent it as a point on the graph. Its position relative to the learned decision boundary helps determine its predicted category.
+            </p>
+            <p>
+              For example, if the point falls inside the region assigned to Spam, the model predicts Spam. However, not every classification problem can be perfectly separated by a simple line. Some datasets contain overlapping classes, noisy observations or complex patterns.
+            </p>
+            <KeyInsight>
+              <strong>Important distinction:</strong> A decision boundary is not necessarily a physical line or curve stored inside every model. It is a useful mathematical and visual way to understand how a classifier divides the input space into regions of predicted classes.
+            </KeyInsight>
+          </div>
+        </Callout>
+      </section>
+
+      {/* ─────────────────────────────────────────────────────────────
+          SLIDE 13 — What is a feature space?
+         ───────────────────────────────────────────────────────────── */}
+      <section id="slide-13" className="space-y-5 rounded-2xl border-2 border-[#F0D6E2] bg-white p-6 shadow-xs">
+        <div className="flex items-center justify-between border-b border-[#F0D6E2] pb-3">
+          <div className="flex items-center gap-2.5">
+            <span className="font-pixel text-xs px-2.5 py-1 rounded-full bg-[#FFE4EF] text-[#8B5CF6] font-bold border border-[#FFB8D2]">
+              SLIDE 13
+            </span>
+            <h2 className="text-xl md:text-2xl font-extrabold text-[#1A1020]">
+              What is a feature space?
+            </h2>
+          </div>
+          <span className="text-xs font-mono font-semibold text-[#6D5970] bg-[#FFF0F6] px-2.5 py-1 rounded-full border border-[#FFB8D2]">
+            Geometry
+          </span>
+        </div>
+
+        {/* Slide Content */}
+        <div className="space-y-3 text-sm text-[#4A3B4E] leading-relaxed">
+          <p>
+            A <strong>feature space</strong> is the mathematical space defined by all possible combinations of the input features used to describe observations.
+          </p>
+          <p>Each dimension of this space corresponds to one feature:</p>
+          <ul className="list-disc pl-5 space-y-1 text-xs">
+            <li>One feature produces a <strong>one-dimensional</strong> feature space.</li>
+            <li>Two features produce a <strong>two-dimensional</strong> feature space.</li>
+            <li>Three features produce a <strong>three-dimensional</strong> feature space.</li>
+            <li><MathInline formula="d" /> features produce a <strong><MathInline formula="d" />-dimensional</strong> feature space.</li>
+          </ul>
+
+          <div className="p-3.5 bg-[#FFF7FA] rounded-xl border border-[#FFD6E5] text-xs space-y-1">
+            <span className="font-bold text-[#1A1020] block">Concrete Example:</span>
+            <p>Consider a dataset with two features:</p>
+            <p className="font-mono text-[11px] text-[#96003B]">
+              x₁ = Number of links &nbsp;|&nbsp; x₂ = Number of suspicious words
+            </p>
+            <p>An email represented by the vector:</p>
+            <MathBlock formula="x = \begin{bmatrix} 5 \\ 3 \end{bmatrix}" />
+            <p>corresponds to a point at coordinates <MathInline formula="(5, 3)" />.</p>
+          </div>
+
+          <ExternalImageCard
+            src="https://images.openai.com/static-rsc-4/vLZCq9Axtm09GfJ1rebiXfRTLEwzcl2bbiG70C_dq0C8NEnqHcmi_xkZ9SNQpaTzrzD9HT10EY03cWntikT4Q3Bj7OoddSe7bhU-sBTPjxhEFG5p48SE6miX7-SToHdH-P_zUe1lVGRvfbKvBgidDUlaf0JXyyYPAlm-_8IoAUo?purpose=inline"
+            title="Smote for Imbalanced Classification with Python | Analytics Vidhya"
+            sourceUrl="https://www.analyticsvidhya.com/blog/2020/10/overcoming-class-imbalance-using-smote-techniques/?utm_source=chatgpt.com"
+            sourceLabel="analyticsvidhya.com"
+            caption="Points populated and partitioned throughout high-dimensional feature spaces."
+          />
+        </div>
+
+        {/* Explanation */}
+        <Callout type="info" title="Explanation">
+          <div className="space-y-2 text-xs md:text-sm">
+            <p>
+              The feature space allows us to visualize the data mathematically. Each observation is represented by a point whose coordinates correspond to its feature values.
+            </p>
+            <p>
+              When we have two features, we can plot the observations on a two-dimensional graph. When we have three features, we can visualize them in three dimensions.
+            </p>
+            <p>
+              Real-world datasets may contain hundreds or thousands of features. In those situations, the feature space has many dimensions, and we cannot directly visualize it in an ordinary two-dimensional graph. Nevertheless, the mathematical concept remains the same.
+            </p>
+          </div>
+        </Callout>
+      </section>
+
+      {/* ─────────────────────────────────────────────────────────────
+          SLIDE 14 — What happens when classes overlap?
+         ───────────────────────────────────────────────────────────── */}
+      <section id="slide-14" className="space-y-5 rounded-2xl border-2 border-[#F0D6E2] bg-white p-6 shadow-xs">
+        <div className="flex items-center justify-between border-b border-[#F0D6E2] pb-3">
+          <div className="flex items-center gap-2.5">
+            <span className="font-pixel text-xs px-2.5 py-1 rounded-full bg-[#FFE4EF] text-[#8B5CF6] font-bold border border-[#FFB8D2]">
+              SLIDE 14
+            </span>
+            <h2 className="text-xl md:text-2xl font-extrabold text-[#1A1020]">
+              What happens when classes overlap?
+            </h2>
+          </div>
+          <span className="text-xs font-mono font-semibold text-[#6D5970] bg-[#FFF0F6] px-2.5 py-1 rounded-full border border-[#FFB8D2]">
+            Noise & Ambiguity
+          </span>
+        </div>
+
+        {/* Slide Content */}
+        <div className="space-y-3 text-sm text-[#4A3B4E] leading-relaxed">
+          <p>
+            In an idealized dataset, the classes might be clearly separated. However, real-world data is rarely perfect.
+          </p>
+          <p>
+            Consider spam detection again: A legitimate email might contain several links, while a spam email might contain very few. This creates <strong>overlapping regions</strong> in the feature space.
+          </p>
+
+          <ExternalImageCard
+            src="https://images.openai.com/static-rsc-4/AoynaxxZj5TeKsHr4AkyFtJ8MKv5UlsLZFg5tM5NG7EmLs355-6n8-I5G_66vbzwsZad36Cz_fR5Q5L57iBX6zjV9JP3tWu2ZYwC656mM4LneyRfBjV2UY4H52dITaIUvngTyW81RWcqS7tcRShac64PsM67o7GJRw7tWOURYRk?purpose=inline"
+            title="Study on Image Data Cleaning Method Based on Neural Network | Scientific Reports"
+            sourceUrl="https://www.nature.com/articles/s41598-022-18707-6?utm_source=chatgpt.com"
+            sourceLabel="nature.com"
+            caption="Scientific study detailing overlapping sample representations and data boundary ambiguity."
+          />
+
+          <div className="p-4 rounded-xl border-2 border-amber-200 bg-amber-50/60 space-y-2">
+            <h4 className="font-bold text-sm text-amber-900">Definition of Class Overlap</h4>
+            <p className="text-xs md:text-sm text-amber-800 leading-relaxed">
+              <strong>Class overlap</strong> occurs when observations from different classes occupy similar or identical regions of the feature space.
+            </p>
+            <p className="text-xs text-amber-900 font-semibold">
+              This makes classification more difficult because the input features do not provide a perfectly clear distinction between the classes.
+            </p>
+          </div>
+        </div>
+
+        {/* Explanation */}
+        <Callout type="info" title="Explanation">
+          <div className="space-y-2 text-xs md:text-sm">
+            <p>
+              Suppose we receive two emails with exactly the same number of links and suspicious words, but one is labeled Spam and the other Not Spam. Based only on those two features, it may be impossible to distinguish between them.
+            </p>
+            <KeyInsight>
+              This illustrates an important principle: <strong>A classifier cannot reliably distinguish classes using information that is not present in its input features.</strong>
+            </KeyInsight>
+            <p>
+              We may need additional features, a different representation of the data or a different model. Even then, classification errors may remain because real-world observations can be ambiguous or noisy.
+            </p>
+          </div>
+        </Callout>
+      </section>
+
+      {/* ─────────────────────────────────────────────────────────────
+          SLIDE 15 — Does a classifier always know its answer with certainty?
+         ───────────────────────────────────────────────────────────── */}
+      <section id="slide-15" className="space-y-5 rounded-2xl border-2 border-[#F0D6E2] bg-white p-6 shadow-xs">
+        <div className="flex items-center justify-between border-b border-[#F0D6E2] pb-3">
+          <div className="flex items-center gap-2.5">
+            <span className="font-pixel text-xs px-2.5 py-1 rounded-full bg-[#FFE4EF] text-[#8B5CF6] font-bold border border-[#FFB8D2]">
+              SLIDE 15
+            </span>
+            <h2 className="text-xl md:text-2xl font-extrabold text-[#1A1020]">
+              Does a classifier always know its answer with certainty?
+            </h2>
+          </div>
+          <span className="text-xs font-mono font-semibold text-[#6D5970] bg-[#FFF0F6] px-2.5 py-1 rounded-full border border-[#FFB8D2]">
+            Probabilities
+          </span>
+        </div>
+
+        <div className="p-3 bg-[#FFF0F6] rounded-xl border border-[#FFB8D2] font-bold text-sm text-[#FF2E7E]">
+          No. Classifiers do not have absolute certainty.
+        </div>
+
+        {/* Slide Content */}
+        <div className="space-y-3 text-sm text-[#4A3B4E] leading-relaxed">
+          <p>
+            Many classification models can produce scores or estimated probabilities that describe how strongly they support each possible class.
+          </p>
+          <p>Consider a binary spam classifier. For a particular email, the model might produce:</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-center">
+            <MathBlock formula="P(\text{Spam} \mid x) = 0.85" label="Spam Posterior" />
+            <MathBlock formula="P(\text{Not Spam} \mid x) = 0.15" label="Not Spam Posterior" />
+          </div>
+          <p className="text-xs text-[#6D5970]">
+            These values represent the model&apos;s estimated probabilities for the two classes, conditional on the observed features.
+          </p>
+
+          <CompareTable
+            headers={['Class', 'Estimated Probability']}
+            rows={[
+              ['Spam', '0.85'],
+              ['Not Spam', '0.15'],
+            ]}
+          />
+
+          <p className="text-xs text-[#1A1020]">
+            If the model uses a decision threshold of 0.5, it predicts Spam because:
+          </p>
+          <MathBlock formula="0.85 \geq 0.5 \implies \hat{y} = \text{Spam}" label="Decision Rule at Threshold 0.5" />
+        </div>
+
+        {/* Explanation */}
+        <Callout type="info" title="Explanation">
+          <div className="space-y-2 text-xs md:text-sm">
+            <p>
+              A class prediction tells us which category the model selected. A probability estimate tells us how strongly the model&apos;s output supports a particular category.
+            </p>
+            <p>
+              However, these two concepts should not be confused:
+            </p>
+            <ul className="list-disc pl-5 space-y-1 text-xs">
+              <li>A model can be highly confident and still be wrong.</li>
+              <li>A model that outputs 0.85 is not automatically guaranteed to be correct 85% of the time on similar predictions. That interpretation requires the model&apos;s probabilities to be appropriately <strong>calibrated</strong>.</li>
+            </ul>
+            <p>
+              We will return to probabilities and thresholds when studying Logistic Regression and classification evaluation.
+            </p>
+          </div>
+        </Callout>
+      </section>
+
+      {/* ─────────────────────────────────────────────────────────────
+          SLIDE 16 — Introducing the classification algorithms
+         ───────────────────────────────────────────────────────────── */}
+      <section id="slide-16" className="space-y-5 rounded-2xl border-2 border-[#F0D6E2] bg-white p-6 shadow-xs">
+        <div className="flex items-center justify-between border-b border-[#F0D6E2] pb-3">
+          <div className="flex items-center gap-2.5">
+            <span className="font-pixel text-xs px-2.5 py-1 rounded-full bg-[#FFE4EF] text-[#8B5CF6] font-bold border border-[#FFB8D2]">
+              SLIDE 16
+            </span>
+            <h2 className="text-xl md:text-2xl font-extrabold text-[#1A1020]">
+              Introducing the classification algorithms
+            </h2>
+          </div>
+          <span className="text-xs font-mono font-semibold text-[#6D5970] bg-[#FFF0F6] px-2.5 py-1 rounded-full border border-[#FFB8D2]">
+            Three Approaches
+          </span>
+        </div>
+
+        <div className="space-y-3 text-sm text-[#4A3B4E] leading-relaxed">
+          <p>
+            We have now established the central problem: We have observations, each described by features, and we want to predict their classes.
+          </p>
+          <p className="font-semibold text-[#1A1020]">
+            But how does a model actually learn the relationship between features and labels?
+          </p>
+          <p>
+            There is no single method for solving this problem. Different classification algorithms use different mathematical approaches to learn classification rules. We will focus on three fundamental algorithms:
+          </p>
+        </div>
+
+        {/* 3 Core Algorithms with Verified Citations & Visuals */}
+        <div className="space-y-6">
+          {/* 1. KNN */}
+          <div className="space-y-2 p-4 rounded-xl border border-[#F0D6E2] bg-white">
+            <div className="flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-[#FFE4EF] text-[#FF2E7E] text-xs font-mono font-bold flex items-center justify-center">
+                1
+              </span>
+              <h3 className="font-extrabold text-base text-[#1A1020]">K-Nearest Neighbors (KNN)</h3>
             </div>
-          )}
+            <p className="text-xs text-[#4A3B4E] leading-relaxed">
+              KNN classifies a new observation by examining the classes of the nearest training observations. Its central idea is that observations that are close to one another in feature space may share similar labels.
+            </p>
+            <ExternalImageCard
+              src="https://images.openai.com/static-rsc-4/-UxuLGqx3F4IE4CFtz2MBhNlq5tNtY98hggMQbLO19QRdY5RfG5ZJ55iRNjG9VPDm1L1vVsQ8h4BdbhUw0HJITBhjbjxl4KdrH_AzCLyTy_sVlbze_M1nYkPoaIiQwiIDfr7GZCjPPeST4Ubd1kgYHzfuWYp-unUPbJKlIq-WUQ?purpose=inline"
+              title="K-Nearest Neighbors (KNN): A Simple Yet Powerful Machine Learning Algorithm"
+              sourceUrl="https://medium.com/%40ruhelasamridhi/k-nearest-neighbors-knn-a-simple-yet-powerful-machine-learning-algorithm-c3a3bd83057a?utm_source=chatgpt.com"
+              sourceLabel="medium.com"
+              caption="KNN voting radius: determining class assignment by Euclidean neighborhood."
+            />
+          </div>
+
+          {/* 2. Decision Trees */}
+          <div className="space-y-2 p-4 rounded-xl border border-[#F0D6E2] bg-white">
+            <div className="flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-[#FFE4EF] text-[#8B5CF6] text-xs font-mono font-bold flex items-center justify-center">
+                2
+              </span>
+              <h3 className="font-extrabold text-base text-[#1A1020]">Decision Trees</h3>
+            </div>
+            <p className="text-xs text-[#4A3B4E] leading-relaxed">
+              Decision Trees classify observations by applying a sequence of feature-based decision rules. Each internal node represents a test, each branch represents an outcome, and each leaf represents a predicted class.
+            </p>
+            <ExternalImageCard
+              src="https://images.openai.com/static-rsc-4/FWlWoMwBYQCnrGETeQMHhAftp69sqC7Cuj3_PywxzJb8SfxOlMYdylzOzWnJDkPClMjFxM4aoGEa3Rth_9LhWT35RnAFXZ7Bnki1NIT4BkplB6XqfA12iUJFPJkYtNvNl6ZwTIgOah9qlh12zLHl8sxdaHiGxFOJl5I8t7nw1VY?purpose=inline"
+              title="Decision Trees in Data Science: A Comprehensive Guide"
+              sourceUrl="https://medium.com/%40shivasaichakradhar/decision-trees-in-data-science-a-comprehensive-guide-352d980a3503?utm_source=chatgpt.com"
+              sourceLabel="medium.com"
+              caption="Hierarchical feature splitting tree from root condition to leaf prediction."
+            />
+          </div>
+
+          {/* 3. Logistic Regression */}
+          <div className="space-y-2 p-4 rounded-xl border border-[#F0D6E2] bg-white">
+            <div className="flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-[#FFE4EF] text-[#10B981] text-xs font-mono font-bold flex items-center justify-center">
+                3
+              </span>
+              <h3 className="font-extrabold text-base text-[#1A1020]">Logistic Regression</h3>
+            </div>
+            <p className="text-xs text-[#4A3B4E] leading-relaxed">
+              Logistic Regression uses a mathematical function to estimate the probability of a class based on the input features. For binary classification, it commonly uses the sigmoid function to transform a linear score into a value between zero and one.
+            </p>
+            <ExternalImageCard
+              src="https://images.openai.com/static-rsc-4/vTQqTOnSagekeBgFiMaDTy-movPNzrf1ZRs1jC9Llstq07aJaZSvZEPjFKOe4HRa-zgokbUkiqWHTDIy2XVkYb8OPidq0Nc8aaX4kzUmcyg8q__4kJezSIj0nSOu70ooteROTNQ1w0UwcZBR38sR4oIAri9MU2pCUlcHesvWoiw?purpose=inline"
+              title="Logistic Regression Explained: ML Coding for Interviews"
+              sourceUrl="https://medium.com/nailing-the-ai-ml-interview/selection-of-the-loss-functions-for-logistic-regression-ed2077f7075e?utm_source=chatgpt.com"
+              sourceLabel="medium.com"
+              caption="Sigmoid S-curve mapping continuous linear inputs to calibrated probabilities in [0, 1]."
+            />
+          </div>
         </div>
-      </section>
 
-      {/* 2.3 What is supervised learning? */}
-      <section className="space-y-4">
-        <div>
-          <span className="font-pixel text-[10px] uppercase font-bold text-[#FF2E7E] tracking-wider block mb-1">
-            SECTION 2.3
-          </span>
-          <h2 className="text-xl font-extrabold text-[#1A1020]">
-            What is Supervised Learning?
-          </h2>
-        </div>
-
-        <ThoughtPrompt
-          question="How do humans learn to recognize cats?"
-          context="You show a child many labeled pictures: 'This is a cat', 'This is a dog'. The child notices whiskers, ear shape, and tail patterns. Later, shown an unlabelled animal, the child accurately predicts 'Cat!'."
-        />
-
-        <div className="overflow-x-auto rounded-2xl border-2 border-[#FFD6E5] bg-white shadow-sm">
-          <table className="w-full border-collapse text-left text-xs md:text-sm">
-            <thead>
-              <tr className="bg-[#FFE4EF] border-b-2 border-[#FFB8D2] text-[#96003B] font-mono text-xs uppercase">
-                <th className="py-3 px-4">Step</th>
-                <th className="py-3 px-4">What Happens Under the Hood</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#F7EAF0]">
-              <tr>
-                <td className="py-3 px-4 font-bold text-[#1A1020]">1. Labeled training data</td>
-                <td className="py-3 px-4 text-[#4A3B4E]">Features X + known ground-truth labels y provided together</td>
-              </tr>
-              <tr>
-                <td className="py-3 px-4 font-bold text-[#1A1020]">2. Learning algorithm</td>
-                <td className="py-3 px-4 text-[#4A3B4E]">Discovers underlying mathematical relationships and boundaries</td>
-              </tr>
-              <tr>
-                <td className="py-3 px-4 font-bold text-[#1A1020]">3. Trained classifier</td>
-                <td className="py-3 px-4 text-[#4A3B4E]">Produces learned model function f(x)</td>
-              </tr>
-              <tr>
-                <td className="py-3 px-4 font-bold text-[#1A1020]">4. New observation</td>
-                <td className="py-3 px-4 text-[#4A3B4E]">Features measured on unseen incoming email; true label is unknown</td>
-              </tr>
-              <tr>
-                <td className="py-3 px-4 font-bold text-[#1A1020]">5. Prediction</td>
-                <td className="py-3 px-4 text-[#4A3B4E]">Trained model outputs ŷ: Spam or Not Spam</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <Callout type="tip" title="Improvement Added: Contrast with Unsupervised Learning">
-          In <strong>unsupervised learning</strong> (such as clustering or anomaly detection), the algorithm
-          receives no ground-truth labels at all and must independently discover latent structure.
-          In <strong>supervised learning</strong>, the presence of verified labels guides the optimization.
+        {/* Explanation */}
+        <Callout type="info" title="Explanation">
+          <div className="space-y-2 text-xs md:text-sm">
+            <p>
+              All three algorithms can solve classification problems, but they learn in different ways:
+            </p>
+            <ul className="list-disc pl-5 space-y-1 text-xs">
+              <li><strong>KNN</strong> relies on distances between observations.</li>
+              <li><strong>Decision Trees</strong> rely on decision rules and feature-based splits.</li>
+              <li><strong>Logistic Regression</strong> learns numerical parameters that determine how input features influence the predicted probability.</li>
+            </ul>
+            <p>
+              This is why understanding the classification problem first is important. Once students understand what the algorithms are trying to achieve, the differences between their mathematical approaches become much easier to understand.
+            </p>
+          </div>
         </Callout>
       </section>
 
-      {/* 2.4 Training versus prediction */}
-      <section className="space-y-4">
-        <div>
-          <span className="font-pixel text-[10px] uppercase font-bold text-[#FF2E7E] tracking-wider block mb-1">
-            SECTION 2.4
+      {/* ─────────────────────────────────────────────────────────────
+          SLIDE 17 — Are all classification models equally suitable?
+         ───────────────────────────────────────────────────────────── */}
+      <section id="slide-17" className="space-y-5 rounded-2xl border-2 border-[#F0D6E2] bg-white p-6 shadow-xs">
+        <div className="flex items-center justify-between border-b border-[#F0D6E2] pb-3">
+          <div className="flex items-center gap-2.5">
+            <span className="font-pixel text-xs px-2.5 py-1 rounded-full bg-[#FFE4EF] text-[#8B5CF6] font-bold border border-[#FFB8D2]">
+              SLIDE 17
+            </span>
+            <h2 className="text-xl md:text-2xl font-extrabold text-[#1A1020]">
+              Are all classification models equally suitable?
+            </h2>
+          </div>
+          <span className="text-xs font-mono font-semibold text-[#6D5970] bg-[#FFF0F6] px-2.5 py-1 rounded-full border border-[#FFB8D2]">
+            Model Selection
           </span>
-          <h2 className="text-xl font-extrabold text-[#1A1020]">
-            Training versus Prediction (Inference)
-          </h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="rounded-2xl border-2 border-[#F0D6E2] bg-white p-5 space-y-2">
-            <span className="font-pixel text-xs font-bold text-[#FF2E7E] px-2 py-0.5 rounded bg-[#FFE4EF]">
-              PHASE 1 · TRAINING
-            </span>
-            <h3 className="font-bold text-base text-[#1A1020]">Model Estimation</h3>
-            <p className="text-xs text-[#4A3B4E] leading-relaxed">
-              The algorithm ingests historical training examples (e.g. 10,000 emails with confirmed Spam / Not Spam tags)
-              to fit parameters, compute distances, or construct decision rules.
-            </p>
-          </div>
-
-          <div className="rounded-2xl border-2 border-[#F0D6E2] bg-white p-5 space-y-2">
-            <span className="font-pixel text-xs font-bold text-[#10B981] px-2 py-0.5 rounded bg-[#ECFDF5]">
-              PHASE 2 · PREDICTION (INFERENCE)
-            </span>
-            <h3 className="font-bold text-base text-[#1A1020]">Real-World Deployment</h3>
-            <p className="text-xs text-[#4A3B4E] leading-relaxed">
-              A brand-new email arrives at 9:02 AM. Its features (links, keywords) are extracted in milliseconds.
-              The trained classifier f outputs ŷ = Spam without ever having seen this email before.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* 2.5 The complete classification workflow */}
-      <section className="space-y-4">
-        <div>
-          <span className="font-pixel text-[10px] uppercase font-bold text-[#FF2E7E] tracking-wider block mb-1">
-            SECTION 2.5
-          </span>
-          <h2 className="text-xl font-extrabold text-[#1A1020]">
-            The Complete 9-Step Classification Workflow
-          </h2>
+        <div className="p-3 bg-[#FFF0F6] rounded-xl border border-[#FFB8D2] font-bold text-sm text-[#FF2E7E]">
+          No. There is no single universally best classification algorithm.
         </div>
 
-        <CompareTable
-          headers={['# Step in Pipeline', 'Key Question Addressed']}
-          rows={workflowSteps}
-          highlight={[4, 5, 6]}
-        />
-
-        {/* Activity: Identify the Data */}
-        <div className="rounded-2xl border border-[#F0D6E2] bg-white p-5 shadow-sm space-y-4">
-          <div className="flex items-center justify-between">
-            <span className="font-pixel text-[10px] px-2.5 py-0.5 rounded-full bg-[#FFE4EF] text-[#FF2E7E] font-bold">
-              ACTIVITY · IDENTIFY THE DATA
-            </span>
-            <span className="text-xs text-[#6D5970]">For each problem, name features &amp; target</span>
+        {/* Slide Content */}
+        <div className="space-y-3 text-sm text-[#4A3B4E] leading-relaxed">
+          <p>
+            The choice of classification algorithm depends on several characteristics of the problem, including:
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+            <div className="p-2.5 bg-white rounded-lg border border-[#F0D6E2]">The size of the dataset</div>
+            <div className="p-2.5 bg-white rounded-lg border border-[#F0D6E2]">The number and nature of the features</div>
+            <div className="p-2.5 bg-white rounded-lg border border-[#F0D6E2]">Linear vs. complex nonlinear relationships</div>
+            <div className="p-2.5 bg-white rounded-lg border border-[#F0D6E2]">Interpretability and audit requirements</div>
+            <div className="p-2.5 bg-white rounded-lg border border-[#F0D6E2]">Computational resources available</div>
+            <div className="p-2.5 bg-white rounded-lg border border-[#F0D6E2]">Relative consequences of error types</div>
           </div>
 
-          <div className="space-y-3">
-            {identifyDataTasks.map((t, idx) => (
-              <div key={idx} className="p-3.5 rounded-xl border border-[#F0D6E2] bg-[#FFFDFE] space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-[#1A1020]">{t.problem}</span>
-                  <button
-                    onClick={() =>
-                      setRevealedTasks((prev) => ({ ...prev, [idx]: !prev[idx] }))
-                    }
-                    className="text-xs font-bold text-[#FF2E7E] hover:underline"
-                  >
-                    {revealedTasks[idx] ? 'Hide Answer' : 'Reveal Features & Target'}
-                  </button>
-                </div>
-
-                {revealedTasks[idx] && (
-                  <div className="text-xs grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-[#F0D6E2]">
-                    <div>
-                      <span className="text-[#6D5970] font-semibold block">Possible Features (X):</span>
-                      <span className="text-[#1A1020] font-medium">{t.features}</span>
-                    </div>
-                    <div>
-                      <span className="text-[#6D5970] font-semibold block">Target Label (y):</span>
-                      <span className="text-[#FF2E7E] font-bold">{t.target}</span>
-                    </div>
-                  </div>
-                )}
+          <div className="space-y-2 pt-2">
+            <h4 className="font-bold text-xs uppercase text-[#6D5970] tracking-wider font-mono">
+              Model Tradeoffs Summary
+            </h4>
+            <div className="space-y-2 text-xs">
+              <div className="p-3 bg-[#FFF7FA] rounded-lg border border-[#FFD6E5]">
+                <strong className="text-[#FF2E7E] block mb-1">K-Nearest Neighbors (KNN):</strong>
+                Useful for understanding classification through similarity and distance, but can become computationally expensive when making predictions on very large datasets.
               </div>
-            ))}
+              <div className="p-3 bg-[#FFF7FA] rounded-lg border border-[#FFD6E5]">
+                <strong className="text-[#8B5CF6] block mb-1">Decision Trees:</strong>
+                Produce understandable decision rules, but an excessively complex or deep tree may memorize the training examples (overfitting).
+              </div>
+              <div className="p-3 bg-[#FFF7FA] rounded-lg border border-[#FFD6E5]">
+                <strong className="text-[#10B981] block mb-1">Logistic Regression:</strong>
+                Provides a relatively simple, fast mathematical model, but its standard form may not capture complex nonlinear relationships without additional feature transformations.
+              </div>
+            </div>
           </div>
         </div>
 
-        <Callout type="warning" title="Teacher Note: Data Quality Limits Learning">
-          A feature is not automatically useful simply because it can be measured. Features must carry
-          genuine mutual information about the target. Real-world datasets suffer from missing entries,
-          duplicate records, labeling noise, and sampling bias. <strong>The quality of the data places
-          a hard ceiling on what any algorithm can learn.</strong>
+        {/* Explanation */}
+        <Callout type="info" title="Explanation">
+          <div className="space-y-2 text-xs md:text-sm">
+            <p>
+              There is no universally best classification algorithm for every problem. A model that performs well on one dataset may perform poorly on another.
+            </p>
+            <p>
+              Therefore, selecting a classifier requires understanding the data, the task and the evaluation criteria.
+            </p>
+            <KeyInsight>
+              This also introduces the idea that we should <strong>compare models using appropriate evaluation methods</strong> rather than choosing one simply because it is popular.
+            </KeyInsight>
+          </div>
         </Callout>
       </section>
-
-      {/* Stage 1 Checkpoint */}
-      <div className="rounded-2xl border-2 border-[#FF2E7E] bg-[#FFF0F6] p-5 shadow-sm space-y-3">
-        <span className="font-pixel text-xs text-[#FF2E7E] font-bold uppercase tracking-wider block">
-          STAGE 1 CHECKPOINT · CONCEPTUAL SYNTHESIS
-        </span>
-        <h3 className="font-extrabold text-base text-[#1A1020]">
-          Stage Question: &ldquo;Why can the same email have a feature vector but no label at prediction time?&rdquo;
-        </h3>
-        <p className="text-xs md:text-sm text-[#4A3B4E] leading-relaxed">
-          Because during training, ground truth is supplied to teach the model patterns. In production,
-          the email is real and incoming: we can extract its attributes (link count, words), but its true
-          categorization is unknown — that unknown label is the exact goal the trained model exists to predict!
-        </p>
-      </div>
-
-      <Quiz
-        partNumber={2}
-        questions={[
-          {
-            question: 'Why must the email identifier (ID) be excluded from the feature matrix X?',
-            options: [
-              'Because IDs are arbitrary keys with no generalizable relationship to whether an email is spam.',
-              'Because feature matrices can only contain negative numbers.',
-              'Because supervised learning cannot use more than 2 features.',
-              'Because IDs are converted automatically into class labels.',
-            ],
-            correctIndex: 0,
-            explanation:
-              'Observation IDs (e.g. Email #1042) carry no predictive information about email contents. Using IDs leads to memorization and severe data leakage.',
-          },
-          {
-            question: 'What is the function of the learning algorithm in supervised classification?',
-            options: [
-              'It finds statistical patterns and parameter weights relating training features X to labels y.',
-              'It creates brand new emails to send to users.',
-              'It removes labels from training data so it becomes unsupervised.',
-              'It converts classification problems into regression.',
-            ],
-            correctIndex: 0,
-            explanation:
-              'The learning algorithm ingests (X, y) pairs to construct a classifier function f(x) that maps future feature vectors to predictions.',
-          },
-          {
-            question: 'What happens if a categorical feature like "Sender Reputation: known/unknown" is provided to a classifier?',
-            options: [
-              'It must be encoded into numbers (such as one-hot vectors [1, 0]) because algorithms operate on numerical matrices.',
-              'The model will automatically convert into regression.',
-              'It will immediately achieve 100% test accuracy.',
-              'It is impossible for machine learning to handle categorical data.',
-            ],
-            correctIndex: 0,
-            explanation:
-              'Mathematical classifiers require real-valued vectors. Categorical variables are converted using encoding techniques such as one-hot or ordinal encoding.',
-          },
-        ]}
-      />
     </div>
   );
 }

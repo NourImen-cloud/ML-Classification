@@ -3,18 +3,34 @@
 import { Suspense, useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { lessons, formulaSheet, glossary, misconceptions, scikitLearnCode } from '@/lib/data';
+import {
+  lessons,
+  courseParts,
+  courseSlides,
+  formulaSheet,
+  glossary,
+  misconceptions,
+  scikitLearnCode,
+  courseMetadata,
+} from '@/lib/data';
 import Part1 from '@/components/lessons/Part1';
 import Part2 from '@/components/lessons/Part2';
 import Part3 from '@/components/lessons/Part3';
 import Part4 from '@/components/lessons/Part4';
 import Part5 from '@/components/lessons/Part5';
-import Part6 from '@/components/lessons/Part6';
-import Part7 from '@/components/lessons/Part7';
-import Part8 from '@/components/lessons/Part8';
-import Part9 from '@/components/lessons/Part9';
-import Part10 from '@/components/lessons/Part10';
-import Part11 from '@/components/lessons/Part11';
+import { MathBlock } from '@/components/ui/KatexFormula';
+import {
+  BookOpen,
+  Code,
+  Maximize2,
+  Minimize2,
+  HelpCircle,
+  Sparkles,
+  ChevronRight,
+  ChevronLeft,
+  GraduationCap,
+  ListOrdered,
+} from 'lucide-react';
 
 const PARTS: Record<number, React.ComponentType> = {
   1: Part1,
@@ -22,30 +38,39 @@ const PARTS: Record<number, React.ComponentType> = {
   3: Part3,
   4: Part4,
   5: Part5,
-  6: Part6,
-  7: Part7,
-  8: Part8,
-  9: Part9,
-  10: Part10,
-  11: Part11,
 };
 
 function LessonInner() {
   const params = useParams();
   const router = useRouter();
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [activeDrawer, setActiveDrawer] = useState<'goals' | 'formulas' | 'code' | 'glossary' | 'misconceptions' | null>(null);
+  const [activeDrawer, setActiveDrawer] = useState<'goals' | 'formulas' | 'code' | 'glossary' | 'misconceptions' | 'slides' | null>(null);
 
-  const id = parseInt(params.id as string, 10);
-  const lesson = lessons.find((l) => l.id === id);
-  const prev = lessons.find((l) => l.id === id - 1);
-  const next = lessons.find((l) => l.id === id + 1);
-  const Part = PARTS[id];
+  const rawId = parseInt(params.id as string, 10);
+  
+  // If user entered a slide ID (1..29) instead of part ID (1..5)
+  const isSlideNumber = rawId > 5 && rawId <= 29;
+  const targetPartId = isSlideNumber
+    ? (courseSlides.find((s) => s.id === rawId)?.partId ?? 1)
+    : Math.min(Math.max(1, rawId || 1), 5);
 
-  // Progress across 120 total minutes
-  const minutesBefore = lessons.slice(0, id - 1).reduce((s, l) => s + l.duration, 0);
-  const totalProgress = minutesBefore / 120;
-  const segmentProgress = (lesson?.duration ?? 0) / 120;
+  const currentPart = courseParts.find((p) => p.id === targetPartId) || courseParts[0];
+  const lesson = lessons.find((l) => l.id === targetPartId) || lessons[0];
+  const prevPart = courseParts.find((p) => p.id === targetPartId - 1);
+  const nextPart = courseParts.find((p) => p.id === targetPartId + 1);
+  const PartComponent = PARTS[targetPartId] || Part1;
+
+  // Scroll to slide if slide number was targeted
+  useEffect(() => {
+    if (isSlideNumber) {
+      setTimeout(() => {
+        const el = document.getElementById(`slide-${rawId}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 250);
+    }
+  }, [isSlideNumber, rawId]);
 
   useEffect(() => {
     const onFS = () => setIsFullscreen(!!document.fullscreenElement);
@@ -55,8 +80,8 @@ function LessonInner() {
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowRight') next && router.push(`/lesson/${next.id}`);
-      if (e.key === 'ArrowLeft') prev && router.push(`/lesson/${prev.id}`);
+      if (e.key === 'ArrowRight' && nextPart) router.push(`/lesson/${nextPart.id}`);
+      if (e.key === 'ArrowLeft' && prevPart) router.push(`/lesson/${prevPart.id}`);
       if (e.key === 'f' || e.key === 'F') {
         if (!document.fullscreenElement) document.documentElement.requestFullscreen();
         else document.exitFullscreen();
@@ -65,225 +90,254 @@ function LessonInner() {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [id, next, prev, router]);
+  }, [nextPart, prevPart, router]);
 
-  if (!lesson || !Part) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center space-y-3">
-          <div className="font-pixel text-4xl text-[#FF2E7E]">404</div>
-          <p className="text-[#6D5970] text-sm">Module not found</p>
-          <Link href="/" className="inline-block btn-pink px-4 py-2 text-xs">
-            Return to curriculum
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen();
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen();
+      setIsFullscreen(false);
+    }
+  };
+
+  const handleSlideJump = (slideNum: number) => {
+    const slide = courseSlides.find((s) => s.id === slideNum);
+    if (!slide) return;
+    setActiveDrawer(null);
+    if (slide.partId !== targetPartId) {
+      router.push(`/lesson/${slide.partId}#slide-${slideNum}`);
+    } else {
+      const el = document.getElementById(`slide-${slideNum}`);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white text-[#1A1020] flex flex-col bg-pixel-grid">
       {/* ─── Top Bar ─── */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-[#F0D6E2] shadow-sm">
-        {/* Progress bar */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-[#F0D6E2] shadow-xs">
+        {/* Progress bar across 5 parts */}
         <div className="h-1 bg-[#FFF0F6] relative">
           <div
             className="absolute top-0 left-0 h-full transition-all duration-300"
             style={{
-              width: `${(totalProgress + segmentProgress) * 100}%`,
-              background: '#FF2E7E',
+              width: `${(targetPartId / 5) * 100}%`,
+              background: currentPart.color || '#FF2E7E',
             }}
           />
         </div>
 
         <div className="flex items-center justify-between px-3 md:px-6 py-2.5">
           {/* Left: Home + Breadcrumb */}
-          <div className="flex items-center gap-2 md:gap-3">
+          <div className="flex items-center gap-2 md:gap-3 min-w-0">
             <Link
               href="/"
-              className="text-[#6D5970] hover:text-[#FF2E7E] transition-colors text-xs font-bold flex items-center gap-1"
+              className="text-[#6D5970] hover:text-[#FF2E7E] transition-colors text-xs font-bold flex items-center gap-1 flex-shrink-0"
             >
               <span>←</span>
               <span className="hidden sm:inline">Overview</span>
             </Link>
             <span className="text-[#F0D6E2]">/</span>
-            <span className="font-pixel text-[11px] font-bold text-[#FF2E7E]">
-              M{lesson.module.toString().padStart(2, '0')}
+            <span
+              className="font-pixel text-[11px] font-bold px-2 py-0.5 rounded-full text-white flex-shrink-0"
+              style={{ backgroundColor: currentPart.color }}
+            >
+              {currentPart.partNumber}
             </span>
-            <span className="text-xs font-semibold text-[#1A1020] hidden lg:inline truncate max-w-xs">
-              {lesson.title}
+            <span className="text-xs font-bold text-[#1A1020] hidden sm:inline truncate max-w-xs">
+              {currentPart.title}
             </span>
-            <span className="hidden md:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#FFF0F6] text-[#FF2E7E] border border-[#FFB8D2]">
-              S{lesson.session} · STAGE {lesson.stage}
+            <span className="hidden md:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#FFF0F6] text-[#FF2E7E] border border-[#FFB8D2] flex-shrink-0">
+              {currentPart.slidesRange}
             </span>
           </div>
 
-          {/* Center: Module indicator dots */}
-          <div className="flex items-center gap-1 md:gap-1.5 overflow-x-auto py-1">
-            {lessons.map((l) => (
-              <Link key={l.id} href={`/lesson/${l.id}`}>
-                <div
-                  className="w-2 md:w-2.5 h-2 md:h-2.5 rounded-full transition-all duration-200 cursor-pointer"
-                  title={`Module ${l.module}: ${l.title}`}
-                  style={{
-                    backgroundColor: l.id === id ? '#FF2E7E' : l.id < id ? '#1A1020' : '#F0D6E2',
-                    transform: l.id === id ? 'scale(1.4)' : 'scale(1)',
-                  }}
-                />
-              </Link>
-            ))}
+          {/* Center: 5 Parts Navigation Pills */}
+          <div className="flex items-center gap-1.5 overflow-x-auto py-1">
+            {courseParts.map((p) => {
+              const isActive = p.id === targetPartId;
+              return (
+                <Link key={p.id} href={`/lesson/${p.id}`}>
+                  <button
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
+                      isActive
+                        ? 'bg-[#1A1020] text-white shadow-xs'
+                        : 'bg-[#FFF0F6] text-[#6D5970] hover:text-[#FF2E7E] hover:bg-[#FFE4EF]'
+                    }`}
+                  >
+                    <span>{p.partNumber}</span>
+                  </button>
+                </Link>
+              );
+            })}
           </div>
 
           {/* Right: Controls & Reference Drawers */}
           <div className="flex items-center gap-1.5 md:gap-2">
+            {/* Quick Slide Index Drawer */}
             <button
-              onClick={() => setActiveDrawer((v) => (v === 'goals' ? null : 'goals'))}
-              className={`px-2.5 py-1 rounded-full border text-xs font-semibold transition-colors ${
-                activeDrawer === 'goals'
-                  ? 'bg-[#FF2E7E] text-white border-[#FF2E7E]'
-                  : 'border-[#F0D6E2] text-[#6D5970] hover:border-[#FF2E7E] hover:text-[#FF2E7E]'
+              onClick={() => setActiveDrawer((v) => (v === 'slides' ? null : 'slides'))}
+              className={`px-2.5 py-1 text-xs font-mono font-bold rounded-lg border transition-all flex items-center gap-1 ${
+                activeDrawer === 'slides'
+                  ? 'bg-[#1A1020] text-white border-[#1A1020]'
+                  : 'bg-white text-[#1A1020] border-[#F0D6E2] hover:border-[#FF2E7E]'
               }`}
+              title="All 29 Slides Index"
             >
-              Goal
+              <ListOrdered className="w-3.5 h-3.5 text-[#FF2E7E]" />
+              <span className="hidden md:inline">29 Slides</span>
             </button>
+
+            {/* Formulas Drawer */}
             <button
               onClick={() => setActiveDrawer((v) => (v === 'formulas' ? null : 'formulas'))}
-              className={`px-2.5 py-1 rounded-full border text-xs font-semibold transition-colors hidden sm:inline ${
+              className={`px-2.5 py-1 text-xs font-mono font-bold rounded-lg border transition-all ${
                 activeDrawer === 'formulas'
                   ? 'bg-[#FF2E7E] text-white border-[#FF2E7E]'
-                  : 'border-[#F0D6E2] text-[#6D5970] hover:border-[#FF2E7E] hover:text-[#FF2E7E]'
+                  : 'bg-white text-[#1A1020] border-[#F0D6E2] hover:border-[#FF2E7E]'
               }`}
             >
               Formulas
             </button>
-            <button
-              onClick={() => setActiveDrawer((v) => (v === 'code' ? null : 'code'))}
-              className={`px-2.5 py-1 rounded-full border text-xs font-semibold transition-colors hidden md:inline ${
-                activeDrawer === 'code'
-                  ? 'bg-[#FF2E7E] text-white border-[#FF2E7E]'
-                  : 'border-[#F0D6E2] text-[#6D5970] hover:border-[#FF2E7E] hover:text-[#FF2E7E]'
-              }`}
-            >
-              Python
-            </button>
+
+            {/* Glossary Drawer */}
             <button
               onClick={() => setActiveDrawer((v) => (v === 'glossary' ? null : 'glossary'))}
-              className={`px-2.5 py-1 rounded-full border text-xs font-semibold transition-colors hidden lg:inline ${
+              className={`px-2.5 py-1 text-xs font-mono font-bold rounded-lg border transition-all hidden sm:inline-block ${
                 activeDrawer === 'glossary'
-                  ? 'bg-[#FF2E7E] text-white border-[#FF2E7E]'
-                  : 'border-[#F0D6E2] text-[#6D5970] hover:border-[#FF2E7E] hover:text-[#FF2E7E]'
+                  ? 'bg-[#8B5CF6] text-white border-[#8B5CF6]'
+                  : 'bg-white text-[#1A1020] border-[#F0D6E2] hover:border-[#8B5CF6]'
               }`}
             >
               Glossary
             </button>
+
+            {/* Fullscreen Button */}
             <button
-              onClick={() => {
-                if (!document.fullscreenElement) document.documentElement.requestFullscreen();
-                else document.exitFullscreen();
-              }}
-              className="px-2.5 py-1 rounded-full border border-[#F0D6E2] text-xs font-semibold text-[#6D5970] hover:border-[#FF2E7E] hover:text-[#FF2E7E] transition-colors"
+              onClick={toggleFullscreen}
+              className="p-1.5 text-xs text-[#6D5970] hover:text-[#1A1020] rounded-lg border border-[#F0D6E2] hover:bg-[#FFF7FA] transition-colors"
+              title="Toggle Fullscreen (F)"
             >
-              {isFullscreen ? 'Exit' : 'Full'}
+              {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
             </button>
           </div>
         </div>
       </header>
 
-      {/* ─── Top Drawer Panes ─── */}
+      {/* ─── Drawer Modal Panel ─── */}
       {activeDrawer && (
-        <div className="fixed top-12 left-0 right-0 z-40 bg-[#FFF7FA] border-b border-[#F0D6E2] px-6 py-4 shadow-lg max-h-[70vh] overflow-y-auto">
-          <div className="max-w-4xl mx-auto space-y-3">
-            <div className="flex items-center justify-between border-b border-[#F0D6E2] pb-2">
-              <span className="font-pixel text-xs text-[#FF2E7E] font-bold uppercase tracking-wider">
-                {activeDrawer === 'goals' && `Module ${lesson.module} Objectives & Stage Checkpoint`}
-                {activeDrawer === 'formulas' && 'Appendix A · Formula Reference Sheet'}
-                {activeDrawer === 'code' && 'Appendix B · Complete Lesson in Scikit-Learn'}
-                {activeDrawer === 'glossary' && 'Appendix C · Terminology Glossary'}
-                {activeDrawer === 'misconceptions' && 'Part 5 · Common Misconceptions'}
+        <div className="fixed inset-0 z-40 bg-black/30 backdrop-blur-xs flex justify-end animate-fadeIn">
+          <div
+            className="w-full max-w-xl bg-white h-full shadow-2xl p-6 overflow-y-auto space-y-4 pt-16 border-l border-[#F0D6E2]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-[#F0D6E2]">
+              <span className="font-pixel text-xs text-[#FF2E7E] uppercase font-bold tracking-wider">
+                {activeDrawer === 'slides' && 'Complete 29 Slides Navigator'}
+                {activeDrawer === 'formulas' && 'Course Mathematical Formulas (KaTeX)'}
+                {activeDrawer === 'glossary' && 'Ten Core Terminology Concepts'}
+                {activeDrawer === 'goals' && 'Curriculum Objectives & Checkpoints'}
+                {activeDrawer === 'code' && 'Scikit-Learn Reference Implementation'}
               </span>
               <button
                 onClick={() => setActiveDrawer(null)}
-                className="text-xs font-bold text-[#6D5970] hover:text-[#1A1020] px-2 py-1 rounded hover:bg-white"
+                className="text-xs font-bold text-[#6D5970] hover:text-[#1A1020] px-2.5 py-1 rounded bg-[#FFF0F6] hover:bg-[#FFE4EF]"
               >
                 ✕ Close
               </button>
             </div>
 
-            {/* Goals Content */}
-            {activeDrawer === 'goals' && (
-              <div className="space-y-3 text-xs md:text-sm text-[#4A3B4E]">
-                <div className="p-3 bg-white rounded-xl border border-[#F0D6E2]">
-                  <span className="font-bold text-[#1A1020] block mb-1">Learning Goal:</span>
-                  <p>{lesson.learningGoal}</p>
-                </div>
-                <div className="p-3 bg-white rounded-xl border border-[#FFB8D2] space-y-1">
-                  <span className="font-pixel text-[10px] text-[#FF2E7E] font-bold block">
-                    STAGE {lesson.stage} CHECKPOINT QUESTION
-                  </span>
-                  <p className="font-semibold text-[#1A1020]">{lesson.stageQuestion}</p>
-                </div>
-              </div>
-            )}
-
-            {/* Formulas Content */}
-            {activeDrawer === 'formulas' && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                {formulaSheet.map((f, i) => (
-                  <div key={i} className="p-3 bg-white rounded-xl border border-[#F0D6E2] space-y-1">
-                    <span className="font-bold text-[#1A1020] block">{f.concept}</span>
-                    <div className="font-mono text-[#96003B] bg-[#FFF0F6] px-2 py-1 rounded">
-                      {f.formula}
-                    </div>
-                    <p className="text-[11px] text-[#6D5970]">{f.desc}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Code Content */}
-            {activeDrawer === 'code' && (
-              <div className="space-y-2">
-                <p className="text-xs text-[#6D5970]">
-                  Production pipeline implementing stratified split, training-only scaling, KNN, Logistic Regression thresholding, and confusion matrix:
+            {/* Slides Navigator */}
+            {activeDrawer === 'slides' && (
+              <div className="space-y-4 text-xs">
+                <p className="text-[#6D5970]">
+                  Click any slide to jump directly to that slide in the presentation:
                 </p>
-                <pre className="p-4 bg-[#1A1020] text-[#F0D6E2] rounded-xl text-xs font-mono overflow-x-auto">
-                  {scikitLearnCode}
-                </pre>
+                {courseParts.map((part) => (
+                  <div key={part.id} className="space-y-1.5">
+                    <span className="font-bold text-[#1A1020] font-mono text-xs block text-purple-900 bg-purple-50 p-2 rounded">
+                      {part.partNumber} · {part.title} ({part.slidesRange})
+                    </span>
+                    <div className="grid grid-cols-1 gap-1 pl-2">
+                      {courseSlides
+                        .filter((s) => s.partId === part.id)
+                        .map((s) => (
+                          <button
+                            key={s.id}
+                            onClick={() => handleSlideJump(s.id)}
+                            className="p-2 text-left rounded-lg hover:bg-[#FFF0F6] flex items-center justify-between border border-transparent hover:border-[#FFB8D2] transition-colors"
+                          >
+                            <span className="font-semibold text-gray-800">
+                              Slide {s.slideNumber}: {s.title}
+                            </span>
+                            <span className="text-[10px] font-mono text-[#FF2E7E]">Jump →</span>
+                          </button>
+                        ))}
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
 
-            {/* Glossary Content */}
+            {/* Formulas Sheet */}
+            {activeDrawer === 'formulas' && (
+              <div className="space-y-4 text-xs">
+                <p className="text-[#6D5970]">
+                  All mathematical definitions rendered rigorously with KaTeX:
+                </p>
+                <div className="space-y-3">
+                  {formulaSheet.map((f, i) => (
+                    <div key={i} className="p-3 bg-[#FFF7FA] rounded-xl border border-[#FFD6E5] space-y-1">
+                      <span className="font-bold text-[#1A1020] block text-xs font-mono">{f.concept}</span>
+                      <MathBlock formula={f.formula} />
+                      <p className="text-[11px] text-[#6D5970]">{f.desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Glossary */}
             {activeDrawer === 'glossary' && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                {glossary.map((g, i) => (
-                  <div key={i} className="p-2.5 bg-white rounded-xl border border-[#F0D6E2]">
-                    <span className="font-bold text-[#FF2E7E] block">{g.term}</span>
-                    <p className="text-[#4A3B4E]">{g.meaning}</p>
-                  </div>
-                ))}
+              <div className="space-y-3 text-xs">
+                <p className="text-[#6D5970]">
+                  Ten fundamental terminology definitions from Slide 28:
+                </p>
+                <div className="space-y-2">
+                  {glossary.map((g, i) => (
+                    <div key={i} className="p-3 bg-white rounded-xl border border-[#F0D6E2] space-y-1">
+                      <span className="font-bold text-[#FF2E7E] block font-mono text-xs">
+                        {i + 1}. {g.term}
+                      </span>
+                      <p className="text-[#4A3B4E] leading-relaxed">{g.meaning}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
         </div>
       )}
 
-      {/* ─── Main Lesson Content ─── */}
+      {/* ─── Main Part Content ─── */}
       <main className="flex-1 pt-16 pb-28">
-        <Part />
+        <PartComponent />
       </main>
 
       {/* ─── Bottom Navigation Bar ─── */}
-      <footer className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-[#F0D6E2] px-4 md:px-8 py-3">
+      <footer className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-[#F0D6E2] px-4 md:px-8 py-3 shadow-xs">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div>
-            {prev ? (
+            {prevPart ? (
               <Link
-                href={`/lesson/${prev.id}`}
+                href={`/lesson/${prevPart.id}`}
                 className="btn-white px-4 py-2 text-xs font-bold inline-flex items-center gap-1.5"
               >
                 <span>←</span>
-                <span className="hidden sm:inline">M{prev.module}: {prev.title}</span>
-                <span className="sm:hidden">Prev</span>
+                <span className="hidden sm:inline">{prevPart.partNumber}: {prevPart.title}</span>
+                <span className="sm:hidden">Prev Part</span>
               </Link>
             ) : (
               <Link href="/" className="btn-white px-4 py-2 text-xs font-bold inline-flex items-center gap-1">
@@ -294,17 +348,17 @@ function LessonInner() {
           </div>
 
           <div className="text-center font-mono text-xs font-bold text-[#6D5970]">
-            Module {id} of {lessons.length}
+            {currentPart.partNumber} ({currentPart.slidesRange}) · Part {targetPartId} of 5
           </div>
 
           <div>
-            {next ? (
+            {nextPart ? (
               <Link
-                href={`/lesson/${next.id}`}
+                href={`/lesson/${nextPart.id}`}
                 className="btn-pink px-4 py-2 text-xs font-bold inline-flex items-center gap-1.5"
               >
-                <span className="hidden sm:inline">M{next.module}: {next.title}</span>
-                <span className="sm:hidden">Next</span>
+                <span className="hidden sm:inline">{nextPart.partNumber}: {nextPart.title}</span>
+                <span className="sm:hidden">Next Part</span>
                 <span>→</span>
               </Link>
             ) : (
@@ -312,7 +366,7 @@ function LessonInner() {
                 href="/playground"
                 className="btn-pink px-5 py-2 text-xs font-bold inline-flex items-center gap-1.5"
               >
-                <span>Open Playground</span>
+                <span>Interactive Playground</span>
                 <span>→</span>
               </Link>
             )}
@@ -330,7 +384,7 @@ export default function LessonPage() {
         <div className="min-h-screen bg-white flex items-center justify-center text-[#FF2E7E]">
           <div className="text-center space-y-2">
             <div className="w-8 h-8 border-3 border-[#FF2E7E] border-t-transparent rounded-full animate-spin mx-auto" />
-            <p className="font-pixel text-xs">Loading module...</p>
+            <p className="font-pixel text-xs">Loading presentation part...</p>
           </div>
         </div>
       }

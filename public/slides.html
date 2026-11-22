@@ -1,0 +1,2413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Classification in Machine Learning — Trail Guide Presentation</title>
+  <!-- Google Fonts: Oswald (Sign headers) & Plus Jakarta Sans (Body) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <!-- KaTeX for crisp mathematical formulas -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous" onload="renderMath()"></script>
+
+  <style>
+    :root {
+      --bg-forest: #16322C;
+      --bg-forest-dark: #112621;
+      --bg-forest-light: #1D3F38;
+      --topo-stroke: rgba(45, 95, 80, 0.42);
+      --wood-orange: #E85D36;
+      --wood-orange-dark: #C84620;
+      --wood-orange-shadow: #8A2A10;
+      --wood-post: #7A2818;
+      --wood-post-dark: #581B10;
+      --tree-green: #516E5D;
+      --tree-green-dark: #3F5749;
+      --grass-teal: #2B8C80;
+      --grass-teal-dark: #1E6B61;
+      --text-cream: #FFF4EB;
+      --text-tan: #E5D5C3;
+      --text-muted: #A89F94;
+      --accent-gold: #F5C26B;
+      --rope-color: #191919;
+      --slide-width: 1920px;
+      --slide-height: 1080px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background-color: #0B1714;
+      color: var(--text-tan);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ─── Presentation Viewport ─── */
+    #deck-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #0A1412;
+    }
+
+    #slide-viewport {
+      position: relative;
+      width: var(--slide-width);
+      height: var(--slide-height);
+      transform-origin: center center;
+      box-shadow: 0 25px 70px rgba(0, 0, 0, 0.7);
+      overflow: hidden;
+      background-color: var(--bg-forest);
+    }
+
+    /* ─── Slide Container ─── */
+    .slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: none;
+      opacity: 0;
+      transition: opacity 0.3s ease-in-out;
+      background: radial-gradient(circle at 50% 40%, var(--bg-forest-light) 0%, var(--bg-forest) 70%, var(--bg-forest-dark) 100%);
+      z-index: 1;
+    }
+
+    .slide.active {
+      display: block;
+      opacity: 1;
+      z-index: 2;
+    }
+
+    /* ─── Background SVG Layers ─── */
+    .bg-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .topo-lines {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.6;
+    }
+
+    .trees-left {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 380px;
+      height: 480px;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    .trees-right {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 380px;
+      height: 480px;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    /* ─── Logos at bottom center ─── */
+    .bottom-trail-icons {
+      position: absolute;
+      bottom: 36px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 50px;
+      z-index: 10;
+    }
+
+    .campfire-icon, .brain-icon {
+      width: 60px;
+      height: 60px;
+      filter: drop-shadow(0 4px 10px rgba(0,0,0,0.4));
+    }
+
+    /* ─── Milestone Badge (bottom right) ─── */
+    .milestone-badge {
+      position: absolute;
+      bottom: 30px;
+      right: 140px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      z-index: 15;
+    }
+
+    .milestone-post {
+      width: 14px;
+      height: 40px;
+      background: var(--wood-post);
+      border-radius: 2px;
+      margin-top: -6px;
+    }
+
+    .milestone-pill {
+      background: var(--wood-orange);
+      color: var(--text-cream);
+      font-family: 'Oswald', sans-serif;
+      font-weight: 700;
+      font-size: 32px;
+      padding: 6px 18px;
+      border-radius: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      border: 2px solid #FFA080;
+      line-height: 1;
+    }
+
+    /* ─── Slide Content Layer ─── */
+    .slide-body {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      padding: 40px 100px;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ─── Top Hanging Wood Plank ─── */
+    .hanging-header-container {
+      position: relative;
+      margin-top: -40px;
+      margin-left: 20px;
+      align-self: flex-start;
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .hanging-ropes {
+      display: flex;
+      justify-content: space-between;
+      width: 82%;
+      height: 44px;
+    }
+
+    .rope {
+      width: 5px;
+      height: 100%;
+      background: var(--rope-color);
+      box-shadow: 1px 0 2px rgba(0,0,0,0.5);
+    }
+
+    .wood-plank {
+      position: relative;
+      background: var(--wood-orange);
+      padding: 18px 46px;
+      color: var(--text-cream);
+      font-family: 'Oswald', sans-serif;
+      font-size: 50px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.45);
+      clip-path: polygon(
+        0% 8px, 6px 0%, 98% 0%, 100% 12px, 
+        99% 42px, 100% 85%, 97% 100%, 8px 100%, 
+        0% 88%, 2% 45%
+      );
+      border-top: 1px solid rgba(255, 255, 255, 0.25);
+      border-bottom: 3px solid var(--wood-orange-dark);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Plank grommets / holes */
+    .plank-washer {
+      position: absolute;
+      top: -6px;
+      width: 18px;
+      height: 18px;
+      background: var(--bg-forest-dark);
+      border: 3px solid #1A1A1A;
+      border-radius: 50%;
+    }
+    .plank-washer.left { left: 16%; }
+    .plank-washer.right { right: 16%; }
+
+    /* Fine wood grain streaks */
+    .wood-grain {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 6px,
+        rgba(150, 40, 10, 0.12) 6px,
+        rgba(150, 40, 10, 0.12) 8px
+      );
+      pointer-events: none;
+    }
+
+    /* ─── Typography & Content Layouts ─── */
+    .content-area {
+      margin-top: 55px;
+      max-width: 1420px;
+      width: 100%;
+    }
+
+    .lead-text {
+      font-size: 40px;
+      line-height: 1.45;
+      color: var(--text-cream);
+      font-weight: 500;
+      margin-bottom: 26px;
+    }
+
+    .lead-text strong, .highlight-orange {
+      color: #FF7B54;
+      font-weight: 700;
+    }
+
+    .lead-text .highlight-gold {
+      color: var(--accent-gold);
+      font-weight: 700;
+    }
+
+    .body-paragraph {
+      font-size: 32px;
+      line-height: 1.5;
+      color: var(--text-tan);
+      margin-bottom: 24px;
+    }
+
+    .humor-note {
+      font-size: 24px;
+      font-style: italic;
+      color: #CBB9A7;
+      margin-top: 40px;
+      line-height: 1.45;
+      padding-left: 20px;
+      border-left: 3px solid rgba(232, 93, 54, 0.6);
+    }
+
+    /* ─── Numbered List (like Slide 10 in PDF) ─── */
+    .trail-list {
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+      margin-top: 30px;
+    }
+
+    .trail-list-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 24px;
+    }
+
+    .trail-num {
+      font-family: 'Oswald', sans-serif;
+      font-size: 38px;
+      font-weight: 700;
+      color: var(--wood-orange);
+      line-height: 1;
+      margin-top: 4px;
+    }
+
+    .trail-list-content h3 {
+      font-size: 34px;
+      color: var(--text-cream);
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .trail-list-content p {
+      font-size: 27px;
+      color: var(--text-tan);
+      line-height: 1.4;
+    }
+
+    /* ─── 2-Column Table (like Slide 14 in PDF) ─── */
+    .trail-table {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 460px 1fr;
+      gap: 28px 48px;
+      margin-top: 30px;
+    }
+
+    .trail-table-header {
+      font-family: 'Oswald', sans-serif;
+      font-size: 34px;
+      font-weight: 700;
+      color: var(--accent-gold);
+      letter-spacing: 0.05em;
+      border-bottom: 2px solid rgba(245, 194, 107, 0.3);
+      padding-bottom: 12px;
+    }
+
+    .trail-table-cell-left {
+      font-size: 30px;
+      font-weight: 600;
+      color: var(--text-cream);
+    }
+
+    .trail-table-cell-right {
+      font-size: 28px;
+      color: var(--text-tan);
+      line-height: 1.35;
+    }
+
+    /* ─── Cards Grid ─── */
+    .cards-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+      margin-top: 40px;
+    }
+
+    .cards-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      margin-top: 35px;
+    }
+
+    .trail-card {
+      background: rgba(18, 42, 36, 0.7);
+      border: 2px solid rgba(75, 120, 105, 0.4);
+      border-radius: 14px;
+      padding: 32px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.3);
+    }
+
+    .trail-card.highlight {
+      border-color: var(--wood-orange);
+      background: rgba(30, 52, 45, 0.85);
+    }
+
+    .trail-card h4 {
+      font-family: 'Oswald', sans-serif;
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--accent-gold);
+      margin-bottom: 14px;
+      letter-spacing: 0.03em;
+    }
+
+    .trail-card p {
+      font-size: 24px;
+      color: var(--text-tan);
+      line-height: 1.45;
+    }
+
+    /* ─── Stepped Process / Waterfall (like Slide 9 in PDF) ─── */
+    .lifecycle-container {
+      display: flex;
+      gap: 60px;
+      margin-top: 30px;
+      align-items: flex-start;
+    }
+
+    .lifecycle-left {
+      width: 480px;
+    }
+
+    .lifecycle-steps {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .lifecycle-box {
+      background: #73B5A8;
+      color: #12332B;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 700;
+      font-size: 23px;
+      padding: 16px 28px;
+      border: 2px solid #3F756B;
+      box-shadow: 3px 5px 12px rgba(0,0,0,0.35);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 580px;
+      position: relative;
+    }
+
+    /* ─── Confusion Matrix 2x2 Grid ─── */
+    .cm-grid {
+      display: grid;
+      grid-template-columns: 240px 320px 320px;
+      grid-template-rows: 70px 180px 180px;
+      gap: 14px;
+      margin-top: 25px;
+    }
+
+    .cm-cell {
+      border-radius: 10px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    .cm-header {
+      font-family: 'Oswald', sans-serif;
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--accent-gold);
+    }
+
+    .cm-tp { background: rgba(43, 140, 128, 0.4); border: 2px solid #2B8C80; }
+    .cm-tn { background: rgba(43, 140, 128, 0.4); border: 2px solid #2B8C80; }
+    .cm-fp { background: rgba(232, 93, 54, 0.35); border: 2px solid #E85D36; }
+    .cm-fn { background: rgba(232, 93, 54, 0.35); border: 2px solid #E85D36; }
+
+    /* ─── Section Divider Slide (like Slide 3, 8, 11, 16, 17 in PDF) ─── */
+    .divider-slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+
+    .center-signpost {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .post-top-icons {
+      display: flex;
+      gap: 36px;
+      margin-bottom: 20px;
+    }
+
+    .signpost-wood-column {
+      width: 90px;
+      height: 640px;
+      background: var(--wood-post);
+      border-radius: 4px;
+      box-shadow: 8px 12px 30px rgba(0,0,0,0.6);
+      position: relative;
+      border-left: 2px solid #A23A25;
+      border-right: 2px solid var(--wood-post-dark);
+    }
+
+    .directional-sign {
+      position: absolute;
+      top: 140px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--wood-orange);
+      color: var(--text-cream);
+      font-family: 'Oswald', sans-serif;
+      font-size: 78px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+      padding: 24px 80px;
+      text-transform: uppercase;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.55);
+      clip-path: polygon(
+        0% 12px, 20px 0%, 97% 0%, 100% 25px, 
+        96% 75%, 100% 100%, 12px 100%, 0% 82%, 3% 40%
+      );
+      border-top: 2px solid rgba(255, 255, 255, 0.3);
+      border-bottom: 4px solid var(--wood-orange-dark);
+      z-index: 20;
+    }
+
+    .sub-sign {
+      position: absolute;
+      top: 310px;
+      left: 50%;
+      transform: translateX(-50%) rotate(-2deg);
+      background: var(--wood-orange);
+      color: var(--text-cream);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 42px;
+      font-weight: 700;
+      white-space: nowrap;
+      padding: 16px 50px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.5);
+      clip-path: polygon(
+        0% 8px, 12px 0%, 98% 0%, 100% 18px, 
+        97% 85%, 100% 100%, 6px 100%, 0% 90%
+      );
+      z-index: 20;
+    }
+
+    .post-grass-tuft {
+      position: absolute;
+      bottom: -30px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 240px;
+      height: 120px;
+      z-index: 25;
+    }
+
+    /* ─── Table of Contents (Dual Hangers like Slide 2 in PDF) ─── */
+    .toc-container {
+      display: flex;
+      justify-content: center;
+      gap: 120px;
+      margin-top: 50px;
+      width: 100%;
+    }
+
+    .toc-column {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .toc-top-rope {
+      width: 260px;
+      height: 60px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .toc-plank {
+      position: relative;
+      background: var(--wood-orange);
+      color: var(--text-cream);
+      font-family: 'Oswald', sans-serif;
+      font-size: 48px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 22px 55px;
+      width: 580px;
+      text-align: center;
+      margin-bottom: 24px;
+      box-shadow: 0 12px 28px rgba(0,0,0,0.5);
+      clip-path: polygon(
+        0% 6px, 10px 0%, 98% 0%, 100% 10px, 
+        98% 45%, 100% 88%, 97% 100%, 8px 100%, 
+        0% 88%, 3% 45%
+      );
+      border-top: 1px solid rgba(255, 255, 255, 0.25);
+      border-bottom: 3px solid var(--wood-orange-dark);
+    }
+
+    .toc-inter-ropes {
+      display: flex;
+      justify-content: space-between;
+      width: 60%;
+      height: 22px;
+      margin-top: -24px;
+      margin-bottom: 4px;
+    }
+
+    /* ─── Interactive HUD Controls ─── */
+    #hud-controls {
+      position: fixed;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(14, 30, 26, 0.88);
+      border: 1px solid rgba(75, 120, 105, 0.4);
+      backdrop-filter: blur(8px);
+      padding: 8px 18px;
+      border-radius: 40px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      z-index: 1000;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    }
+
+    .hud-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-tan);
+      cursor: pointer;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .hud-btn:hover {
+      background: var(--wood-orange);
+      color: #FFF;
+    }
+
+    .hud-counter {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      color: var(--accent-gold);
+      font-weight: 700;
+      padding: 0 8px;
+    }
+
+    /* ─── Slide Overview Modal ─── */
+    #overview-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(8, 18, 15, 0.96);
+      backdrop-filter: blur(12px);
+      z-index: 2000;
+      display: none;
+      flex-direction: column;
+      padding: 40px;
+      overflow-y: auto;
+    }
+
+    #overview-modal.open {
+      display: flex;
+    }
+
+    .overview-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .overview-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 20px;
+    }
+
+    .overview-card {
+      background: var(--bg-forest);
+      border: 2px solid rgba(75, 120, 105, 0.3);
+      border-radius: 10px;
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .overview-card:hover {
+      border-color: var(--wood-orange);
+      transform: translateY(-3px);
+    }
+
+    .overview-card.active {
+      border-color: var(--accent-gold);
+      box-shadow: 0 0 15px rgba(245, 194, 107, 0.4);
+    }
+
+    /* ─── Print Styles for PDF Export (Ctrl+P) ─── */
+    @media print {
+      body {
+        background: transparent;
+        overflow: visible;
+      }
+      #hud-controls, #overview-modal {
+        display: none !important;
+      }
+      #deck-container {
+        width: 100%;
+        height: auto;
+        display: block;
+      }
+      #slide-viewport {
+        width: 100% !important;
+        height: auto !important;
+        transform: none !important;
+        box-shadow: none !important;
+      }
+      .slide {
+        position: relative !important;
+        display: block !important;
+        opacity: 1 !important;
+        width: 1920px !important;
+        height: 1080px !important;
+        page-break-after: always;
+        break-after: page;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ─── Master SVG Symbols & Assets ─── -->
+  <svg style="display: none;">
+    <!-- Topographic contour curves -->
+    <symbol id="topo-paths" viewBox="0 0 1920 1080">
+      <path d="M-50,200 C300,120 600,280 950,180 C1300,80 1600,220 2000,150" fill="none" stroke="rgba(45, 95, 80, 0.45)" stroke-width="2"/>
+      <path d="M-50,320 C350,260 700,380 1100,280 C1500,180 1750,320 2000,270" fill="none" stroke="rgba(45, 95, 80, 0.45)" stroke-width="2"/>
+      <path d="M-50,450 C250,380 550,520 900,430 C1250,340 1650,480 2000,410" fill="none" stroke="rgba(45, 95, 80, 0.45)" stroke-width="2"/>
+      <path d="M-50,600 C400,520 750,670 1150,570 C1550,470 1800,610 2000,560" fill="none" stroke="rgba(45, 95, 80, 0.45)" stroke-width="2"/>
+      <path d="M-50,750 C300,690 650,830 1050,740 C1450,650 1700,780 2000,730" fill="none" stroke="rgba(45, 95, 80, 0.45)" stroke-width="2"/>
+      <path d="M-50,900 C450,840 850,980 1250,880 C1650,780 1850,920 2000,870" fill="none" stroke="rgba(45, 95, 80, 0.45)" stroke-width="2"/>
+      <!-- Concentric contour elevation loops -->
+      <path d="M1400,250 C1520,200 1680,240 1720,330 C1760,420 1620,480 1480,450 C1340,420 1280,300 1400,250 Z" fill="none" stroke="rgba(45, 95, 80, 0.45)" stroke-width="2"/>
+      <path d="M1450,280 C1540,240 1640,270 1670,330 C1700,390 1590,440 1490,420 C1390,400 1360,320 1450,280 Z" fill="none" stroke="rgba(45, 95, 80, 0.45)" stroke-width="2"/>
+      <path d="M220,700 C340,650 480,720 500,800 C520,880 400,940 280,910 C160,880 120,750 220,700 Z" fill="none" stroke="rgba(45, 95, 80, 0.45)" stroke-width="2"/>
+    </symbol>
+
+    <!-- Pine Trees Silhouette -->
+    <symbol id="pine-trees" viewBox="0 0 350 480">
+      <!-- Back tree -->
+      <polygon points="120,100 135,135 125,135 145,175 132,175 155,220 140,220 165,270 100,270 100,330 80,330 80,270 15,270 40,220 25,220 48,175 35,175 55,135 45,135 60,100" fill="#364E41"/>
+      <!-- Main front tall pine -->
+      <polygon points="230,20 250,70 238,70 262,130 248,130 275,195 258,195 290,265 270,265 305,340 285,340 320,420 140,420 175,340 155,340 190,265 170,265 202,195 185,195 212,130 198,130 222,70 210,70" fill="#4B6A58"/>
+      <!-- Trunk -->
+      <rect x="220" y="420" width="20" height="60" fill="#2E4237"/>
+    </symbol>
+
+    <!-- Stylized Campfire Icon -->
+    <symbol id="icon-campfire" viewBox="0 0 80 80">
+      <!-- Crossed logs -->
+      <line x1="20" y1="68" x2="60" y2="68" stroke="#E85D36" stroke-width="5" stroke-linecap="round"/>
+      <line x1="16" y1="74" x2="48" y2="58" stroke="#E85D36" stroke-width="5" stroke-linecap="round"/>
+      <line x1="64" y1="74" x2="32" y2="58" stroke="#E85D36" stroke-width="5" stroke-linecap="round"/>
+      <!-- Geometric flame crystals -->
+      <polygon points="40,16 48,32 40,48 32,32" fill="#E85D36"/>
+      <polygon points="40,28 46,38 40,50 34,38" fill="#FF8A65"/>
+      <polygon points="26,36 32,46 26,56 20,46" fill="#E85D36"/>
+      <polygon points="54,36 60,46 54,56 48,46" fill="#E85D36"/>
+      <!-- Tiny embers -->
+      <rect x="38" y="8" width="4" height="4" fill="#FFA080"/>
+      <rect x="48" y="20" width="4" height="4" fill="#FFA080"/>
+    </symbol>
+
+    <!-- Stylized Brain-Circuit Icon -->
+    <symbol id="icon-brain" viewBox="0 0 80 80">
+      <!-- Brain outline with circuit lines -->
+      <path d="M40,14 C28,14 20,24 20,36 C20,46 26,54 36,58 L36,66 L44,66 L44,58 C54,54 60,46 60,36 C60,24 52,14 40,14 Z" fill="none" stroke="#E85D36" stroke-width="4" stroke-linecap="round"/>
+      <!-- Internal nodes and neural connections -->
+      <circle cx="34" cy="28" r="4" fill="#E85D36"/>
+      <circle cx="46" cy="28" r="4" fill="#E85D36"/>
+      <circle cx="30" cy="42" r="4" fill="#E85D36"/>
+      <circle cx="50" cy="42" r="4" fill="#E85D36"/>
+      <circle cx="40" cy="48" r="3" fill="#FFA080"/>
+      <line x1="34" y1="28" x2="46" y2="28" stroke="#E85D36" stroke-width="2"/>
+      <line x1="34" y1="28" x2="30" y2="42" stroke="#E85D36" stroke-width="2"/>
+      <line x1="46" y1="28" x2="50" y2="42" stroke="#E85D36" stroke-width="2"/>
+      <line x1="30" y1="42" x2="40" y2="48" stroke="#E85D36" stroke-width="2"/>
+      <line x1="50" y1="42" x2="40" y2="48" stroke="#E85D36" stroke-width="2"/>
+    </symbol>
+
+    <!-- Grass tuft for signpost base -->
+    <symbol id="grass-tuft" viewBox="0 0 200 100">
+      <polygon points="100,10 70,100 130,100" fill="#2B8C80"/>
+      <polygon points="50,30 20,100 80,100" fill="#1E6B61"/>
+      <polygon points="150,30 120,100 180,100" fill="#1E6B61"/>
+      <polygon points="25,50 0,100 50,100" fill="#2B8C80"/>
+      <polygon points="175,50 150,100 200,100" fill="#2B8C80"/>
+    </symbol>
+  </svg>
+
+  <!-- ─── Presentation Container ─── -->
+  <div id="deck-container">
+    <div id="slide-viewport">
+
+      <!-- ========================================================
+           SLIDE 1: Title Slide (Matches PDF Page 1)
+           ======================================================== -->
+      <section class="slide active" id="slide-1">
+        <!-- Topo & Trees -->
+        <svg class="topo-lines"><use href="#topo-paths"/></svg>
+        <svg class="trees-left"><use href="#pine-trees"/></svg>
+        <svg class="trees-right" style="transform: scaleX(-1);"><use href="#pine-trees"/></svg>
+
+        <div class="slide-body" style="align-items: center; justify-content: flex-start; padding-top: 0;">
+          <!-- Hanging Main Wooden Sign -->
+          <div style="display: flex; flex-direction: column; align-items: center; margin-top: 0;">
+            <!-- Ropes -->
+            <div style="display: flex; justify-content: space-between; width: 680px; height: 110px;">
+              <div class="rope"></div>
+              <div class="rope"></div>
+            </div>
+
+            <!-- Main Plank -->
+            <div class="wood-plank" style="width: 960px; height: 190px; flex-direction: column; padding: 20px 40px;">
+              <div class="wood-grain"></div>
+              <div class="plank-washer left" style="left: 145px; top: -8px;"></div>
+              <div class="plank-washer right" style="right: 145px; top: -8px;"></div>
+              
+              <h1 style="font-size: 72px; letter-spacing: 0.05em; line-height: 1.05; text-align: center;">
+                CLASSIFICATION IN ML
+              </h1>
+              <div style="display: flex; align-items: center; gap: 20px; margin-top: 8px;">
+                <span style="height: 2px; width: 60px; background: rgba(255,255,255,0.4);"></span>
+                <span style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 32px; font-weight: 500; color: #FFDECC; letter-spacing: 0.02em;">
+                  Supervised Learning Trail
+                </span>
+                <span style="height: 2px; width: 60px; background: rgba(255,255,255,0.4);"></span>
+              </div>
+            </div>
+
+            <!-- Interconnecting Ropes -->
+            <div style="display: flex; justify-content: space-between; width: 500px; height: 45px; margin-top: -6px;">
+              <div class="rope"></div>
+              <div class="rope"></div>
+            </div>
+
+            <!-- Lower Plank with Brain Icon -->
+            <div class="wood-plank" style="width: 640px; height: 125px; padding: 10px; margin-top: -4px;">
+              <div class="wood-grain"></div>
+              <div class="plank-washer left" style="left: 70px; top: -8px;"></div>
+              <div class="plank-washer right" style="right: 70px; top: -8px;"></div>
+              <svg style="width: 65px; height: 65px;"><use href="#icon-brain"/></svg>
+            </div>
+          </div>
+
+          <!-- Campfire at bottom -->
+          <div class="bottom-trail-icons" style="bottom: 75px;">
+            <svg class="campfire-icon" style="width: 90px; height: 90px;"><use href="#icon-campfire"/></svg>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ========================================================
+           SLIDE 2: Table of Contents (Matches PDF Page 2)
+           ======================================================== -->
+      <section class="slide" id="slide-2">
+        <svg class="topo-lines"><use href="#topo-paths"/></svg>
+        <svg class="trees-left"><use href="#pine-trees"/></svg>
+        <svg class="trees-right" style="transform: scaleX(-1);"><use href="#pine-trees"/></svg>
+
+        <div class="slide-body" style="align-items: center;">
+          <div class="toc-container">
+            <!-- Left Hanger -->
+            <div class="toc-column">
+              <div class="toc-top-rope">
+                <div class="rope"></div>
+                <div class="rope"></div>
+              </div>
+
+              <div class="toc-plank" style="color: #FFD2C0; border-color: #FFA080;">
+                <div class="wood-grain"></div>
+                <div class="plank-washer left" style="left: 160px; top: -6px;"></div>
+                <div class="plank-washer right" style="right: 160px; top: -6px;"></div>
+                TABLE OF CONTENTS
+              </div>
+
+              <div class="toc-inter-ropes">
+                <div class="rope"></div>
+                <div class="rope"></div>
+              </div>
+
+              <div class="toc-plank">
+                <div class="wood-grain"></div>
+                <div class="plank-washer left" style="left: 160px; top: -6px;"></div>
+                <div class="plank-washer right" style="right: 160px; top: -6px;"></div>
+                WHAT IS CLASSIFICATION?
+              </div>
+
+              <div class="toc-inter-ropes">
+                <div class="rope"></div>
+                <div class="rope"></div>
+              </div>
+
+              <div class="toc-plank">
+                <div class="wood-grain"></div>
+                <div class="plank-washer left" style="left: 160px; top: -6px;"></div>
+                <div class="plank-washer right" style="right: 160px; top: -6px;"></div>
+                THE FEATURE SPACE
+              </div>
+            </div>
+
+            <!-- Right Hanger -->
+            <div class="toc-column">
+              <div class="toc-top-rope">
+                <div class="rope"></div>
+                <div class="rope"></div>
+              </div>
+
+              <div class="toc-plank">
+                <div class="wood-grain"></div>
+                <div class="plank-washer left" style="left: 160px; top: -6px;"></div>
+                <div class="plank-washer right" style="right: 160px; top: -6px;"></div>
+                CORE ALGORITHMS
+              </div>
+
+              <div class="toc-inter-ropes">
+                <div class="rope"></div>
+                <div class="rope"></div>
+              </div>
+
+              <div class="toc-plank">
+                <div class="wood-grain"></div>
+                <div class="plank-washer left" style="left: 160px; top: -6px;"></div>
+                <div class="plank-washer right" style="right: 160px; top: -6px;"></div>
+                EVALUATION & METRICS
+              </div>
+
+              <div class="toc-inter-ropes">
+                <div class="rope"></div>
+                <div class="rope"></div>
+              </div>
+
+              <div class="toc-plank">
+                <div class="wood-grain"></div>
+                <div class="plank-washer left" style="left: 160px; top: -6px;"></div>
+                <div class="plank-washer right" style="right: 160px; top: -6px;"></div>
+                THE FINAL CHALLENGE
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Campfire & Brain -->
+          <div class="bottom-trail-icons">
+            <svg class="campfire-icon"><use href="#icon-campfire"/></svg>
+            <svg class="brain-icon"><use href="#icon-brain"/></svg>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ========================================================
+           SLIDE 3: Section Divider 1 (Matches PDF Page 3)
+           ======================================================== -->
+      <section class="slide" id="slide-3">
+        <svg class="topo-lines"><use href="#topo-paths"/></svg>
+        <svg class="trees-left"><use href="#pine-trees"/></svg>
+        <svg class="trees-right" style="transform: scaleX(-1);"><use href="#pine-trees"/></svg>
+
+        <div class="divider-slide">
+          <div class="center-signpost">
+            <div class="post-top-icons">
+              <svg class="campfire-icon"><use href="#icon-campfire"/></svg>
+              <svg class="brain-icon"><use href="#icon-brain"/></svg>
+            </div>
+            
+            <div class="signpost-wood-column">
+              <div class="directional-sign">
+                WHAT IS CLASSIFICATION?
+              </div>
+            </div>
+
+            <svg class="post-grass-tuft"><use href="#grass-tuft"/></svg>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ========================================================
+           SLIDE 4: Data & Information (Matches PDF Page 4)
+           ======================================================== -->
+      <section class="slide" id="slide-4">
+        <svg class="topo-lines"><use href="#topo-paths"/></svg>
+        <div class="hanging-header-container">
+          <div class="hanging-ropes"><div class="rope"></div><div class="rope"></div></div>
+          <div class="wood-plank">
+            <div class="wood-grain"></div>
+            <div class="plank-washer left"></div><div class="plank-washer right"></div>
+            DATA TO DECISIONS
+          </div>
+        </div>
+
+        <div class="slide-body">
+          <div class="content-area" style="margin-top: 80px;">
+            <p class="lead-text">
+              <strong>Data:</strong> recorded representations of something in the real world (links, words, duration).
+            </p>
+            <p class="lead-text" style="margin-top: 40px;">
+              <strong>Information:</strong> data interpreted in context that helps answer a question ("Is this email dangerous?").
+            </p>
+            <p class="lead-text highlight-gold" style="margin-top: 60px; font-size: 46px;">
+              Classification is just teaching computers how to turn raw data into actionable categories.
+            </p>
+            <p class="humor-note">
+              (Unlike traditional programming where you handwrite 10,000 brittle IF statements, ML algorithms learn the rules from past examples)
+            </p>
+          </div>
+        </div>
+
+        <div class="bottom-trail-icons">
+          <svg class="campfire-icon"><use href="#icon-campfire"/></svg>
+          <svg class="brain-icon"><use href="#icon-brain"/></svg>
+        </div>
+      </section>
+
+
+      <!-- ========================================================
+           SLIDE 5: Classification vs Regression (Matches PDF Page 5)
+           ======================================================== -->
+      <section class="slide" id="slide-5">
+        <svg class="topo-lines"><use href="#topo-paths"/></svg>
+        <div class="hanging-header-container">
+          <div class="hanging-ropes"><div class="rope"></div><div class="rope"></div></div>
+          <div class="wood-plank">
+            <div class="wood-grain"></div>
+            <div class="plank-washer left"></div><div class="plank-washer right"></div>
+            PROBLEM TYPES
+          </div>
+        </div>
+
+        <div class="slide-body">
+          <div class="content-area">
+            <h2 style="font-size: 44px; color: var(--accent-gold); font-family: 'Oswald', sans-serif; margin-bottom: 25px;">
+              TYPES OF PREDICTIVE TASKS IN THE WILD
+            </h2>
+
+            <div class="cards-grid-3">
+              <div class="trail-card highlight">
+                <h4>Binary Classification</h4>
+                <p>Output belongs to exactly one of <strong>two</strong> discrete buckets.</p>
+                <p style="margin-top: 10px; color: var(--text-cream); font-weight: 600;">$y \in \{\text{Spam}, \text{Not Spam}\}$ or $\{0, 1\}$</p>
+              </div>
+
+              <div class="trail-card">
+                <h4>Multiclass Classification</h4>
+                <p>Output is assigned to exactly one of <strong>$K > 2$</strong> categories.</p>
+                <p style="margin-top: 10px; color: var(--text-cream); font-weight: 600;">$y \in \{\text{Primary}, \text{Social}, \text{Promotions}\}$</p>
+              </div>
+
+              <div class="trail-card">
+                <h4>Multilabel Classification</h4>
+                <p>An observation can possess <strong>multiple labels</strong> at once.</p>
+                <p style="margin-top: 10px; color: var(--text-cream); font-weight: 600;">$Y = \{\text{Urgent}, \text{Finance}, \text{Invoice}\}$</p>
+              </div>
+            </div>
+
+            <div class="trail-card" style="margin-top: 35px; border-color: rgba(245, 194, 107, 0.4);">
+              <h4 style="color: #FFA080;">THE CRITICAL DISTINCTION: CLASSIFICATION VS. REGRESSION</h4>
+              <p style="font-size: 28px;">
+                <strong>Classification</strong> predicts a <em>discrete qualitative label</em>: $f: X \rightarrow C$.<br>
+                <strong>Regression</strong> predicts a <em>continuous numerical value</em>: $f: X \rightarrow \mathbb{R}$ (e.g. house price or rainfall in mm).
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bottom-trail-icons">
+          <svg class="campfire-icon"><use href="#icon-campfire"/></svg>
+          <svg class="brain-icon"><use href="#icon-brain"/></svg>
+        </div>
+      </section>
+
+
+      <!-- ========================================================
+           SLIDE 6: Mathematical Representation
+           ======================================================== -->
+      <section class="slide" id="slide-6">
+        <svg class="topo-lines"><use href="#topo-paths"/></svg>
+        <div class="hanging-header-container">
+          <div class="hanging-ropes"><div class="rope"></div><div class="rope"></div></div>
+          <div class="wood-plank">
+            <div class="wood-grain"></div>
+            <div class="plank-washer left"></div><div class="plank-washer right"></div>
+            MATHEMATICAL FORMULATION
+          </div>
+        </div>
+
+        <div class="slide-body">
+          <div class="content-area">
+            <p class="lead-text">
+              We formally represent a supervised learning dataset as a set of $n$ labeled pairs:
+            </p>
+            <div style="font-size: 42px; text-align: center; margin: 30px 0; color: var(--accent-gold); font-family: 'JetBrains Mono', monospace;">
+              $$D = \{(x_i, y_i)\}_{i=1}^{n}, \quad x_i \in \mathbb{R}^d, \quad y_i \in C$$
+            </div>
+
+            <div class="cards-grid-2">
+              <div class="trail-card">
+                <h4>Feature Matrix $X \in \mathbb{R}^{n \times d}$</h4>
+                <p>Each row represents an <strong>observation</strong> (one email). Each column represents a measurable <strong>feature</strong> (link count, word count, sender domain).</p>
+                <div style="margin-top: 15px; font-size: 24px; color: var(--text-cream);">
+                  $$x = \begin{bmatrix} \text{Links} \\ \text{Suspicious Words} \end{bmatrix}$$
+                </div>
+              </div>
+
+              <div class="trail-card">
+                <h4>Ground-Truth Label $y$ & Prediction $\hat{y}$</h4>
+                <p>The goal is to learn a hypothesis function $f: X \rightarrow C$ such that predicted class $\hat{y} = f(x)$ matches true class $y$ with high probability on <strong>unseen future data</strong>.</p>
+              </div>
+            </div>
+
+            <p class="humor-note">
+              (At prediction time, the model only receives $x$ — it has never seen $y$. If your model cheats and peeks at $y$, that's data leakage!)
+            </p>
+          </div>
+        </div>
+
+        <div class="bottom-trail-icons">
+          <svg class="campfire-icon"><use href="#icon-campfire"/></svg>
+          <svg class="brain-icon"><use href="#icon-brain"/></svg>
+        </div>
+      </section>
+
+
+      <!-- ========================================================
+           SLIDE 7: Section Divider 2 (Matches PDF Page 8)
+           ======================================================== -->
+      <section class="slide" id="slide-7">
+        <svg class="topo-lines"><use href="#topo-paths"/></svg>
+        <svg class="trees-left"><use href="#pine-trees"/></svg>
+        <svg class="trees-right" style="transform: scaleX(-1);"><use href="#pine-trees"/></svg>
+
+        <div class="divider-slide">
+          <div class="center-signpost">
+            <div class="post-top-icons">
+              <svg class="campfire-icon"><use href="#icon-campfire"/></svg>
+              <svg class="brain-icon"><use href="#icon-brain"/></svg>
+            </div>
+            
+            <div class="signpost-wood-column">
+              <div class="directional-sign">
+                HOW CLASSIFIERS DECIDE
+              </div>
+            </div>
+
+            <svg class="post-grass-tuft"><use href="#grass-tuft"/></svg>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ========================================================
+           SLIDE 8: The Feature Space & Scatter Plot
+           ======================================================== -->
+      <section class="slide" id="slide-8">
+        <svg class="topo-lines"><use href="#topo-paths"/></svg>
+        <div class="hanging-header-container">
+          <div class="hanging-ropes"><div class="rope"></div><div class="rope"></div></div>
+          <div class="wood-plank">
+            <div class="wood-grain"></div>
+            <div class="plank-washer left"></div><div class="plank-washer right"></div>
+            THE FEATURE SPACE
+          </div>
+        </div>
+
+        <div class="slide-body">
+          <div class="content-area" style="display: flex; gap: 60px; align-items: center;">
+            <div style="flex: 1.1;">
+              <p class="lead-text">
+                Every observation is plotted as a point in geometric space $\mathbb{R}^d$.
+              </p>
+              <p class="body-paragraph">
+                Consider our 10-email running dataset:
+                <br>• <strong>Horizontal axis ($x_1$):</strong> Number of links
+                <br>• <strong>Vertical axis ($x_2$):</strong> Count of suspicious words
+              </p>
+              <div class="trail-card highlight" style="margin-top: 20px;">
+                <h4 style="color: #FFA080;">NOTICE POINT E10 (THE NOISE POINT)</h4>
+                <p>
+                  Email 10 has only 2 links and 2 words, but it is labeled <strong>Spam</strong>! Real datasets always contain noise, mislabels, and overlapping distributions.
+                </p>
+              </div>
+            </div>
+
+            <!-- Stylized Trail Scatter Plot -->
+            <div style="width: 580px; height: 440px; background: rgba(14, 32, 28, 0.85); border: 2px solid rgba(75, 120, 105, 0.5); border-radius: 12px; padding: 25px; position: relative;">
+              <div style="font-family: 'Oswald', sans-serif; font-size: 20px; color: var(--accent-gold); margin-bottom: 12px;">
+                2D FEATURE SPACE MAP
+              </div>
+              <svg viewBox="0 0 500 340" style="width: 100%; height: 320px;">
+                <!-- Grid Lines -->
+                <line x1="50" y1="280" x2="480" y2="280" stroke="#3A584C" stroke-width="2"/>
+                <line x1="50" y1="20" x2="50" y2="280" stroke="#3A584C" stroke-width="2"/>
+                <!-- Axis labels -->
+                <text x="250" y="315" fill="#A89F94" font-size="14" font-family="Plus Jakarta Sans">Number of Links (x₁)</text>
+                <text x="18" y="160" fill="#A89F94" font-size="14" font-family="Plus Jakarta Sans" transform="rotate(-90, 18, 160)">Suspicious Words (x₂)</text>
+
+                <!-- Clean Emails (Green circles) -->
+                <circle cx="80" cy="250" r="10" fill="#2B8C80" stroke="#FFF" stroke-width="2"/>
+                <text x="75" y="235" fill="#FFF" font-size="12">E1</text>
+                <circle cx="120" cy="270" r="10" fill="#2B8C80" stroke="#FFF" stroke-width="2"/>
+                <circle cx="120" cy="220" r="10" fill="#2B8C80" stroke="#FFF" stroke-width="2"/>
+                <circle cx="170" cy="250" r="10" fill="#2B8C80" stroke="#FFF" stroke-width="2"/>
+                <circle cx="220" cy="250" r="10" fill="#2B8C80" stroke="#FFF" stroke-width="2"/>
+
+                <!-- Spam Emails (Orange diamonds) -->
+                <polygon points="320,110 330,125 320,140 310,125" fill="#E85D36" stroke="#FFF" stroke-width="2"/>
+                <polygon points="380,160 390,175 380,190 370,175" fill="#E85D36" stroke="#FFF" stroke-width="2"/>
+                <polygon points="270,80 280,95 270,110 260,95" fill="#E85D36" stroke="#FFF" stroke-width="2"/>
+                <polygon points="430,80 440,95 430,110 420,95" fill="#E85D36" stroke="#FFF" stroke-width="2"/>
+
+                <!-- Noise point E10 -->
+                <polygon points="170,210 180,225 170,240 160,225" fill="#FF5252" stroke="#FFF" stroke-width="3"/>
+                <text x="190" y="230" fill="#FF8A80" font-size="14" font-weight="700">E10 (Noise)</text>
+
+                <!-- Hypothetical Decision Boundary -->
+                <path d="M 230,280 C 240,200 250,150 260,20" stroke="#F5C26B" stroke-width="3" stroke-dasharray="6,6" fill="none"/>
+                <text x="270" y="45" fill="#F5C26B" font-size="14" font-weight="700">Decision Boundary</text>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bottom-trail-icons">
+          <svg class="campfire-icon"><use href="#icon-campfire"/></svg>
+          <svg class="brain-icon"><use href="#icon-brain"/></svg>
+        </div>
+      </section>
+
+
+      <!-- ========================================================
+           SLIDE 9: Decision Boundaries & Geometry
+           ======================================================== -->
+      <section class="slide" id="slide-9">
+        <svg class="topo-lines"><use href="#topo-paths"/></svg>
+        <div class="hanging-header-container">
+          <div class="hanging-ropes"><div class="rope"></div><div class="rope"></div></div>
+          <div class="wood-plank">
+            <div class="wood-grain"></div>
+            <div class="plank-washer left"></div><div class="plank-washer right"></div>
+            DECISION BOUNDARIES
+          </div>
+        </div>
+
+        <div class="slide-body">
+          <div class="content-area">
+            <p class="lead-text">
+              A <strong>decision boundary</strong> is a geometric surface that partitions the feature space into regions assigned to different classes.
+            </p>
+
+            <div class="trail-list">
+              <div class="trail-list-item">
+                <span class="trail-num">01.</span>
+                <div class="trail-list-content">
+                  <h3>Linear Boundaries (Hyperplanes)</h3>
+                  <p>Logistic Regression and Linear SVM slice the feature space with a straight line in 2D, a flat plane in 3D, and a hyperplane in $\mathbb{R}^d$. Equation: $w^T x + b = 0$.</p>
+                </div>
+              </div>
+
+              <div class="trail-list-item">
+                <span class="trail-num">02.</span>
+                <div class="trail-list-content">
+                  <h3>Axis-Aligned Rectilinear Steps</h3>
+                  <p>Decision Trees test one feature at a time ($x_1 \ge 3$), creating orthogonal staircase cuts parallel to coordinate axes.</p>
+                </div>
+              </div>
+
+              <div class="trail-list-item">
+                <span class="trail-num">03.</span>
+                <div class="trail-list-content">
+                  <h3>Flexible Voronoi Tessellations</h3>
+                  <p>KNN forms complex irregular territorial boundaries based on localized neighborhood voting.</p>
+                </div>
+              </div>
+            </div>
+
+            <p class="humor-note">
+              (A boundary is NOT a physical line inside the computer memory; it is the geometric threshold where $P(\text{class}) = 0.50$)
+            </p>
+          </div>
+        </div>
+
+        <div class="bottom-trail-icons">
+          <svg class="campfire-icon"><use href="#icon-campfire"/></svg>
+          <svg class="brain-icon"><use href="#icon-brain"/></svg>
+        </div>
+      </section>
+
+
+      <!-- ========================================================
+           SLIDE 10: Section Divider 3 (Matches PDF Page 11)
+           ======================================================== -->
+      <section class="slide" id="slide-10">
+        <svg class="topo-lines"><use href="#topo-paths"/></svg>
+        <svg class="trees-left"><use href="#pine-trees"/></svg>
+        <svg class="trees-right" style="transform: scaleX(-1);"><use href="#pine-trees"/></svg>
+
+        <div class="divider-slide">
+          <div class="center-signpost">
+            <div class="post-top-icons">
+              <svg class="campfire-icon"><use href="#icon-campfire"/></svg>
+              <svg class="brain-icon"><use href="#icon-brain"/></svg>
+            </div>
+            
+            <div class="signpost-wood-column">
+              <div class="directional-sign">
+                THE CORE ALGORITHMS
+              </div>
+            </div>
+
+            <svg class="post-grass-tuft"><use href="#grass-tuft"/></svg>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ========================================================
+           SLIDE 11: K-Nearest Neighbors (KNN)
+           ======================================================== -->
+      <section class="slide" id="slide-11">
+        <svg class="topo-lines"><use href="#topo-paths"/></svg>
+        <div class="hanging-header-container">
+          <div class="hanging-ropes"><div class="rope"></div><div class="rope"></div></div>
+          <div class="wood-plank">
+            <div class="wood-grain"></div>
+            <div class="plank-washer left"></div><div class="plank-washer right"></div>
+            K-NEAREST NEIGHBORS (KNN)
+          </div>
+        </div>
+
+        <div class="slide-body">
+          <div class="content-area">
+            <div class="cards-grid-2">
+              <div>
+                <h3 style="font-size: 38px; color: var(--accent-gold); font-family: 'Oswald', sans-serif; margin-bottom: 18px;">
+                  THE NEIGHBORHOOD PRINCIPLE
+                </h3>
+                <p class="body-paragraph">
+                  To classify a new unlabelled observation $P$, KNN calculates its Euclidean distance to all stored points, locates the $K$ closest neighbors, and takes a majority vote:
+                </p>
+                <div style="font-size: 32px; color: #FFA080; margin: 20px 0;">
+                  $$d(p, q) = \sqrt{\sum_{i=1}^d (p_i - q_i)^2}$$
+                </div>
+                <p class="body-paragraph">
+                  Predicted class: $\hat{y} = \text{mode}(y_1, y_2, \dots, y_K)$.
+                </p>
+              </div>
+
+              <div>
+                <div class="trail-card highlight">
+                  <h4>THE CHOICE OF K MATTERS DEEPLY</h4>
+                  <p style="font-size: 26px; line-height: 1.45;">
+                    • <strong>Small K (e.g. K = 1):</strong> High variance, extremely sensitive to noise. The noise point E10 creates an isolated spam island!
+                    <br><br>
+                    • <strong>Large K (e.g. K = 9):</strong> High bias, over-smoothed. The majority class swamps local minority patterns.
+                  </p>
+                </div>
+
+                <div class="trail-card" style="margin-top: 20px; border-color: rgba(232, 93, 54, 0.4);">
+                  <h4 style="color: #FF7B54;">CRITICAL RULE: STANDARDIZATION</h4>
+                  <p style="font-size: 23px;">
+                    If one feature ranges 0–5 and another ranges 0–10,000, distance is dominated by the large scale! Always standardize: $z = \frac{x - \mu}{\sigma}$.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bottom-trail-icons">
+          <svg class="campfire-icon"><use href="#icon-campfire"/></svg>
+          <svg class="brain-icon"><use href="#icon-brain"/></svg>
+        </div>
+      </section>
+
+
+      <!-- ========================================================
+           SLIDE 12: Decision Trees
+           ======================================================== -->
+      <section class="slide" id="slide-12">
+        <svg class="topo-lines"><use href="#topo-paths"/></svg>
+        <div class="hanging-header-container">
+          <div class="hanging-ropes"><div class="rope"></div><div class="rope"></div></div>
+          <div class="wood-plank">
+            <div class="wood-grain"></div>
+            <div class="plank-washer left"></div><div class="plank-washer right"></div>
+            DECISION TREES
+          </div>
+        </div>
+
+        <div class="slide-body">
+          <div class="content-area">
+            <p class="lead-text">
+              Decision Trees emulate human triage by playing a sequential game of "20 Questions".
+            </p>
+
+            <div class="cards-grid-3">
+              <div class="trail-card">
+                <h4>Tree Anatomy</h4>
+                <p>
+                  • <strong>Root Node:</strong> Topmost decision question.
+                  <br>• <strong>Internal Nodes:</strong> Subsequent feature tests.
+                  <br>• <strong>Leaves:</strong> Final predicted class distributions.
+                </p>
+              </div>
+
+              <div class="trail-card highlight">
+                <h4>Gini Impurity</h4>
+                <p>Trees choose the split that maximizes purity drop:</p>
+                <div style="font-size: 28px; margin: 12px 0; color: var(--accent-gold);">
+                  $$\text{Gini} = 1 - \sum_{k=1}^C p_k^2$$
+                </div>
+                <p style="font-size: 21px;">Pure leaf ($\text{Gini}=0$) contains only one class.</p>
+              </div>
+
+              <div class="trail-card">
+                <h4>The Overfitting Threat</h4>
+                <p>
+                  Unconstrained trees keep branching until every training point is memorized.
+                  <br><br>
+                  <strong>Remedy:</strong> Set `max_depth`, `min_samples_split`, or prune branches!
+                </p>
+              </div>
+            </div>
+
+            <p class="humor-note">
+              (A deep decision tree is like a student who memorizes the textbook down to the page numbers, but fails when the test questions are rephrased)
+            </p>
+          </div>
+        </div>
+
+        <div class="bottom-trail-icons">
+          <svg class="campfire-icon"><use href="#icon-campfire"/></svg>
+          <svg class="brain-icon"><use href="#icon-brain"/></svg>
+        </div>
+      </section>
+
+
+      <!-- ========================================================
+           SLIDE 13: Logistic Regression
+           ======================================================== -->
+      <section class="slide" id="slide-13">
+        <svg class="topo-lines"><use href="#topo-paths"/></svg>
+        <div class="hanging-header-container">
+          <div class="hanging-ropes"><div class="rope"></div><div class="rope"></div></div>
+          <div class="wood-plank">
+            <div class="wood-grain"></div>
+            <div class="plank-washer left"></div><div class="plank-washer right"></div>
+            LOGISTIC REGRESSION
+          </div>
+        </div>
+
+        <div class="slide-body">
+          <div class="content-area">
+            <div class="cards-grid-2">
+              <div>
+                <h3 style="font-size: 38px; color: var(--accent-gold); font-family: 'Oswald', sans-serif; margin-bottom: 18px;">
+                  PREDICTING PROBABILITIES
+                </h3>
+                <p class="body-paragraph">
+                  1. Computes a linear score:
+                  <br><span style="color: #FFA080; font-weight: 700;">$z = w_0 + w_1 x_1 + w_2 x_2 + \dots$</span>
+                </p>
+                <p class="body-paragraph">
+                  2. Squashes score through the <strong>Sigmoid function</strong> to output a calibrated probability between 0 and 1:
+                </p>
+                <div style="font-size: 36px; color: var(--accent-gold); margin: 25px 0;">
+                  $$\sigma(z) = \frac{1}{1 + e^{-z}}$$
+                </div>
+              </div>
+
+              <div>
+                <div class="trail-card highlight">
+                  <h4>THE COMMON NAMING TRAP</h4>
+                  <p style="font-size: 26px; line-height: 1.45;">
+                    Why is it named "Regression" when it performs <strong>Classification</strong>?
+                    <br><br>
+                    Because it mathematically regresses the <em>log-odds</em>:
+                    $$\ln\left(\frac{p}{1-p}\right) = w^T x + b$$
+                    The final class is assigned by applying a decision threshold: $\hat{y} = 1$ if $P \ge 0.5$.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bottom-trail-icons">
+          <svg class="campfire-icon"><use href="#icon-campfire"/></svg>
+          <svg class="brain-icon"><use href="#icon-brain"/></svg>
+        </div>
+      </section>
+
+
+      <!-- ========================================================
+           SLIDE 14: Algorithm Showdown (Matches PDF Page 14)
+           ======================================================== -->
+      <section class="slide" id="slide-14">
+        <svg class="topo-lines"><use href="#topo-paths"/></svg>
+        <div class="hanging-header-container">
+          <div class="hanging-ropes"><div class="rope"></div><div class="rope"></div></div>
+          <div class="wood-plank">
+            <div class="wood-grain"></div>
+            <div class="plank-washer left"></div><div class="plank-washer right"></div>
+            ALGORITHM COMPARISON
+          </div>
+        </div>
+
+        <div class="slide-body">
+          <div class="content-area">
+            <div class="trail-table">
+              <div class="trail-table-header">ALGORITHM</div>
+              <div class="trail-table-header">KEY STRENGTHS, TRADE-OFFS & BOUNDARIES</div>
+
+              <div class="trail-table-cell-left">K-Nearest Neighbors (KNN)</div>
+              <div class="trail-table-cell-right">Non-parametric, no training phase. Slow prediction on big data. Boundary is irregular Voronoi patches. Highly sensitive to feature scales.</div>
+
+              <div class="trail-table-cell-left">Decision Trees</div>
+              <div class="trail-table-cell-right">Extremely explainable (if-else rules). Handles non-linear interactions natively. Boundary is axis-aligned orthogonal boxes. Prone to severe overfitting.</div>
+
+              <div class="trail-table-cell-left">Logistic Regression</div>
+              <div class="trail-table-cell-right">Ultra-fast inference, outputs calibrated probabilities, interpretable feature weights. Boundary is strictly linear (flat hyperplane).</div>
+
+              <div class="trail-table-cell-left">Support Vector Machine (SVM)</div>
+              <div class="trail-table-cell-right">Maximizes the separation margin. Robust against outliers. Kernel trick handles high-dimensional non-linear spaces.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bottom-trail-icons">
+          <svg class="campfire-icon"><use href="#icon-campfire"/></svg>
+          <svg class="brain-icon"><use href="#icon-brain"/></svg>
+        </div>
+      </section>
+
+
+      <!-- ========================================================
+           SLIDE 15: Section Divider 4 (Matches PDF Page 8/11)
+           ======================================================== -->
+      <section class="slide" id="slide-15">
+        <svg class="topo-lines"><use href="#topo-paths"/></svg>
+        <svg class="trees-left"><use href="#pine-trees"/></svg>
+        <svg class="trees-right" style="transform: scaleX(-1);"><use href="#pine-trees"/></svg>
+
+        <div class="divider-slide">
+          <div class="center-signpost">
+            <div class="post-top-icons">
+              <svg class="campfire-icon"><use href="#icon-campfire"/></svg>
+              <svg class="brain-icon"><use href="#icon-brain"/></svg>
+            </div>
+            
+            <div class="signpost-wood-column">
+              <div class="directional-sign">
+                THE ML WORKFLOW
+              </div>
+            </div>
+
+            <svg class="post-grass-tuft"><use href="#grass-tuft"/></svg>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ========================================================
+           SLIDE 16: The 7-Stage Life Cycle (Matches PDF Page 9)
+           ======================================================== -->
+      <section class="slide" id="slide-16">
+        <svg class="topo-lines"><use href="#topo-paths"/></svg>
+        <div class="hanging-header-container">
+          <div class="hanging-ropes"><div class="rope"></div><div class="rope"></div></div>
+          <div class="wood-plank">
+            <div class="wood-grain"></div>
+            <div class="plank-washer left"></div><div class="plank-washer right"></div>
+            THE 7-STAGE PIPELINE
+          </div>
+        </div>
+
+        <div class="slide-body">
+          <div class="lifecycle-container">
+            <div class="lifecycle-left">
+              <p class="lead-text" style="font-size: 38px;">
+                Real-world classification follows an iterative cyclical pipeline.
+              </p>
+              <p class="body-paragraph" style="font-size: 26px; color: var(--accent-gold); margin-top: 25px;">
+                See also: Standard industry frameworks like <strong>CRISP-DM</strong> and <strong>OSEMN</strong>.
+              </p>
+              <p class="humor-note" style="margin-top: 30px;">
+                (Most beginners spend 90% of their time on algorithms, while expert practitioners spend 90% of their time on data quality and validation)
+              </p>
+            </div>
+
+            <div class="lifecycle-steps">
+              <div class="lifecycle-box" style="margin-left: 0;"><span>1. Problem Understanding & Metric Framing</span><span>🎯</span></div>
+              <div class="lifecycle-box" style="margin-left: 30px;"><span>2. Data Collection & Label Verification</span><span>📥</span></div>
+              <div class="lifecycle-box" style="margin-left: 60px;"><span>3. Data Cleaning & Feature Engineering</span><span>🧹</span></div>
+              <div class="lifecycle-box" style="margin-left: 90px; background: #E85D36; color: #FFF; border-color: #FFA080;"><span>4. Exploratory Data Analysis (EDA)</span><span>🔍</span></div>
+              <div class="lifecycle-box" style="margin-left: 120px;"><span>5. Model Training & Cross-Validation</span><span>⚙️</span></div>
+              <div class="lifecycle-box" style="margin-left: 150px;"><span>6. Error Analysis & Threshold Tuning</span><span>📊</span></div>
+              <div class="lifecycle-box" style="margin-left: 180px;"><span>7. Deployment & Drift Monitoring</span><span>🚀</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bottom-trail-icons">
+          <svg class="campfire-icon"><use href="#icon-campfire"/></svg>
+          <svg class="brain-icon"><use href="#icon-brain"/></svg>
+        </div>
+      </section>
+
+
+      <!-- ========================================================
+           SLIDE 17: The Cardinal Sin (Never Test on Training Data)
+           ======================================================== -->
+      <section class="slide" id="slide-17">
+        <svg class="topo-lines"><use href="#topo-paths"/></svg>
+        <div class="hanging-header-container">
+          <div class="hanging-ropes"><div class="rope"></div><div class="rope"></div></div>
+          <div class="wood-plank">
+            <div class="wood-grain"></div>
+            <div class="plank-washer left"></div><div class="plank-washer right"></div>
+            THE CARDINAL SIN
+          </div>
+        </div>
+
+        <div class="slide-body">
+          <div class="content-area">
+            <p class="lead-text highlight-gold">
+              NEVER evaluate a model using the same data it was trained on!
+            </p>
+
+            <div class="cards-grid-3">
+              <div class="trail-card highlight">
+                <h4>1. Training Set (70%)</h4>
+                <p>Used strictly by the learning algorithm to adjust parameters and discover boundaries.</p>
+              </div>
+
+              <div class="trail-card">
+                <h4>2. Validation Set (15%)</h4>
+                <p>Used to tune hyperparameters (selecting optimal $K$, tree depth, and decision threshold $t$).</p>
+              </div>
+
+              <div class="trail-card">
+                <h4>3. Test Set (15%)</h4>
+                <p>Locked in a vault until the very end. Measures genuine generalization on fresh unseen data.</p>
+              </div>
+            </div>
+
+            <p class="humor-note">
+              (Testing on training data is like giving students the exact exam questions and answers the night before, and then celebrating that everyone scored 100%!)
+            </p>
+          </div>
+        </div>
+
+        <div class="bottom-trail-icons">
+          <svg class="campfire-icon"><use href="#icon-campfire"/></svg>
+          <svg class="brain-icon"><use href="#icon-brain"/></svg>
+        </div>
+      </section>
+
+
+      <!-- ========================================================
+           SLIDE 18: Overfitting and Generalization
+           ======================================================== -->
+      <section class="slide" id="slide-18">
+        <svg class="topo-lines"><use href="#topo-paths"/></svg>
+        <div class="hanging-header-container">
+          <div class="hanging-ropes"><div class="rope"></div><div class="rope"></div></div>
+          <div class="wood-plank">
+            <div class="wood-grain"></div>
+            <div class="plank-washer left"></div><div class="plank-washer right"></div>
+            THE GENERALIZATION GAP
+          </div>
+        </div>
+
+        <div class="slide-body">
+          <div class="content-area">
+            <div class="cards-grid-3">
+              <div class="trail-card">
+                <h4>Underfitting (High Bias)</h4>
+                <p>Model is too simple to capture real underlying patterns.</p>
+                <p style="margin-top: 15px; color: #FFA080;"><strong>Symptom:</strong> High training error AND high test error.</p>
+              </div>
+
+              <div class="trail-card highlight">
+                <h4>Optimal Fit (Sweet Spot)</h4>
+                <p>Captures generalizable structure while ignoring random noise.</p>
+                <p style="margin-top: 15px; color: var(--accent-gold);"><strong>Symptom:</strong> Low test error with minimal gap to training error.</p>
+              </div>
+
+              <div class="trail-card">
+                <h4>Overfitting (High Variance)</h4>
+                <p>Model memorizes exact training quirks and outlier noise.</p>
+                <p style="margin-top: 15px; color: #FF5252;"><strong>Symptom:</strong> 0% training error, but catastrophic test failure!</p>
+              </div>
+            </div>
+
+            <div class="trail-card" style="margin-top: 35px; border-color: rgba(75, 120, 105, 0.4);">
+              <h4 style="color: var(--accent-gold);">HOW TO TAME OVERFITTING ON THE TRAIL</h4>
+              <p style="font-size: 26px;">
+                1. Gather more diverse training samples &nbsp;|&nbsp; 
+                2. Regularization ($L_1 / L_2$ penalties) &nbsp;|&nbsp; 
+                3. Constrain complexity (limit tree depth, increase $K$) &nbsp;|&nbsp; 
+                4. K-Fold Cross-Validation.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bottom-trail-icons">
+          <svg class="campfire-icon"><use href="#icon-campfire"/></svg>
+          <svg class="brain-icon"><use href="#icon-brain"/></svg>
+        </div>
+      </section>
+
+
+      <!-- ========================================================
+           SLIDE 19: Section Divider 5 (Matches PDF Page 11)
+           ======================================================== -->
+      <section class="slide" id="slide-19">
+        <svg class="topo-lines"><use href="#topo-paths"/></svg>
+        <svg class="trees-left"><use href="#pine-trees"/></svg>
+        <svg class="trees-right" style="transform: scaleX(-1);"><use href="#pine-trees"/></svg>
+
+        <div class="divider-slide">
+          <div class="center-signpost">
+            <div class="post-top-icons">
+              <svg class="campfire-icon"><use href="#icon-campfire"/></svg>
+              <svg class="brain-icon"><use href="#icon-brain"/></svg>
+            </div>
+            
+            <div class="signpost-wood-column">
+              <div class="directional-sign">
+                EVALUATION & METRICS
+              </div>
+            </div>
+
+            <svg class="post-grass-tuft"><use href="#grass-tuft"/></svg>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ========================================================
+           SLIDE 20: The Confusion Matrix
+           ======================================================== -->
+      <section class="slide" id="slide-20">
+        <svg class="topo-lines"><use href="#topo-paths"/></svg>
+        <div class="hanging-header-container">
+          <div class="hanging-ropes"><div class="rope"></div><div class="rope"></div></div>
+          <div class="wood-plank">
+            <div class="wood-grain"></div>
+            <div class="plank-washer left"></div><div class="plank-washer right"></div>
+            THE CONFUSION MATRIX
+          </div>
+        </div>
+
+        <div class="slide-body">
+          <div class="content-area" style="display: flex; gap: 70px; align-items: center;">
+            <div style="flex: 1;">
+              <p class="lead-text">
+                Not all classification mistakes carry the same consequences!
+              </p>
+              <p class="body-paragraph">
+                The 2×2 Confusion Matrix cross-tabulates predicted outcomes against true ground-truth classes.
+              </p>
+              <div class="trail-card highlight" style="margin-top: 25px;">
+                <h4 style="color: #FF7B54;">ASYMMETRIC COSTS</h4>
+                <p>
+                  A <strong>False Positive</strong> throws your university acceptance letter or flight confirmation into the Spam folder! That is far worse than an occasional spam email reaching the inbox.
+                </p>
+              </div>
+            </div>
+
+            <!-- 2x2 Matrix Table -->
+            <div class="cm-grid">
+              <div></div>
+              <div class="cm-cell cm-header">PREDICTED SPAM</div>
+              <div class="cm-cell cm-header">PREDICTED NOT SPAM</div>
+
+              <div class="cm-cell cm-header">ACTUAL SPAM</div>
+              <div class="cm-cell cm-tp">
+                <span style="font-size: 26px; font-weight: 800; color: #FFF;">TRUE POSITIVE (TP)</span>
+                <span style="font-size: 19px; color: #C8E6C9; margin-top: 6px;">Spam caught correctly</span>
+              </div>
+              <div class="cm-cell cm-fn">
+                <span style="font-size: 26px; font-weight: 800; color: #FFF;">FALSE NEGATIVE (FN)</span>
+                <span style="font-size: 19px; color: #FFCDD2; margin-top: 6px;">Spam slipped into Inbox</span>
+              </div>
+
+              <div class="cm-cell cm-header">ACTUAL NOT SPAM</div>
+              <div class="cm-cell cm-fp">
+                <span style="font-size: 26px; font-weight: 800; color: #FFF;">FALSE POSITIVE (FP)</span>
+                <span style="font-size: 19px; color: #FFCDD2; margin-top: 6px;">Clean email marked Spam!</span>
+              </div>
+              <div class="cm-cell cm-tn">
+                <span style="font-size: 26px; font-weight: 800; color: #FFF;">TRUE NEGATIVE (TN)</span>
+                <span style="font-size: 19px; color: #C8E6C9; margin-top: 6px;">Clean email safe in Inbox</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bottom-trail-icons">
+          <svg class="campfire-icon"><use href="#icon-campfire"/></svg>
+          <svg class="brain-icon"><use href="#icon-brain"/></svg>
+        </div>
+      </section>
+
+
+      <!-- ========================================================
+           SLIDE 21: Metric Formulas
+           ======================================================== -->
+      <section class="slide" id="slide-21">
+        <svg class="topo-lines"><use href="#topo-paths"/></svg>
+        <div class="hanging-header-container">
+          <div class="hanging-ropes"><div class="rope"></div><div class="rope"></div></div>
+          <div class="wood-plank">
+            <div class="wood-grain"></div>
+            <div class="plank-washer left"></div><div class="plank-washer right"></div>
+            EVALUATION METRICS
+          </div>
+        </div>
+
+        <div class="slide-body">
+          <div class="content-area">
+            <div class="cards-grid-2">
+              <div class="trail-card">
+                <h4>Accuracy</h4>
+                <div style="font-size: 30px; color: var(--accent-gold); margin: 8px 0;">
+                  $$\text{Accuracy} = \frac{TP + TN}{TP + TN + FP + FN}$$
+                </div>
+                <p>Overall percentage of correct predictions across all classes.</p>
+              </div>
+
+              <div class="trail-card highlight">
+                <h4>Precision ("Quality")</h4>
+                <div style="font-size: 30px; color: #FFA080; margin: 8px 0;">
+                  $$\text{Precision} = \frac{TP}{TP + FP}$$
+                </div>
+                <p>When the model screams "SPAM", how often is it actually right?</p>
+              </div>
+
+              <div class="trail-card highlight">
+                <h4>Recall / Sensitivity ("Quantity")</h4>
+                <div style="font-size: 30px; color: #FFA080; margin: 8px 0;">
+                  $$\text{Recall} = \frac{TP}{TP + FN}$$
+                </div>
+                <p>Out of all actual spam out there, what percentage did we catch?</p>
+              </div>
+
+              <div class="trail-card">
+                <h4>F1-Score</h4>
+                <div style="font-size: 30px; color: var(--accent-gold); margin: 8px 0;">
+                  $$F_1 = 2 \times \frac{\text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}}$$
+                </div>
+                <p>The harmonic mean balancing precision and recall without distortion.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bottom-trail-icons">
+          <svg class="campfire-icon"><use href="#icon-campfire"/></svg>
+          <svg class="brain-icon"><use href="#icon-brain"/></svg>
+        </div>
+      </section>
+
+
+      <!-- ========================================================
+           SLIDE 22: The Accuracy Trap (Matches PDF Page 12 "I LIED")
+           ======================================================== -->
+      <section class="slide" id="slide-22">
+        <svg class="topo-lines"><use href="#topo-paths"/></svg>
+        <div class="hanging-header-container">
+          <div class="hanging-ropes"><div class="rope"></div><div class="rope"></div></div>
+          <div class="wood-plank" style="background: #D94025;">
+            <div class="wood-grain"></div>
+            <div class="plank-washer left"></div><div class="plank-washer right"></div>
+            I LIED.
+          </div>
+        </div>
+
+        <div class="slide-body">
+          <div class="content-area" style="text-align: center; margin-top: 60px;">
+            <h2 style="font-family: 'Oswald', sans-serif; font-size: 80px; color: var(--text-cream); letter-spacing: 0.03em;">
+              Accuracy is completely misleading.
+            </h2>
+            <p style="font-size: 36px; color: var(--accent-gold); margin-top: 30px; font-weight: 500;">
+              ...on imbalanced datasets, high accuracy is a dangerous illusion.
+            </p>
+
+            <div class="trail-card highlight" style="max-width: 1000px; margin: 50px auto 0; text-align: left; padding: 40px;">
+              <h4 style="font-size: 34px; color: #FFA080;">THE 1,000-EMAIL FRAUD TRAP</h4>
+              <p style="font-size: 28px; line-height: 1.5;">
+                Suppose a stream of 1,000 emails contains only <strong>10 spam messages (1%)</strong>.
+                <br><br>
+                A completely useless "dummy" model that predicts <em>"NOT SPAM"</em> for every single email achieves:
+                <br>• <strong>Accuracy: 99.0%</strong> 🎉
+                <br>• <strong>Spam Caught (Recall): 0.0%</strong> 💀
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bottom-trail-icons">
+          <svg class="campfire-icon"><use href="#icon-campfire"/></svg>
+          <svg class="brain-icon"><use href="#icon-brain"/></svg>
+        </div>
+      </section>
+
+
+      <!-- ========================================================
+           SLIDE 23: Thresholds and Trade-offs
+           ======================================================== -->
+      <section class="slide" id="slide-23">
+        <svg class="topo-lines"><use href="#topo-paths"/></svg>
+        <div class="hanging-header-container">
+          <div class="hanging-ropes"><div class="rope"></div><div class="rope"></div></div>
+          <div class="wood-plank">
+            <div class="wood-grain"></div>
+            <div class="plank-washer left"></div><div class="plank-washer right"></div>
+            DECISION THRESHOLDS
+          </div>
+        </div>
+
+        <div class="slide-body">
+          <div class="content-area">
+            <p class="lead-text">
+              The model gives a probability $P(\text{Spam} \mid x)$. <strong>YOU</strong> choose the threshold $t$!
+            </p>
+
+            <div class="cards-grid-2" style="margin-top: 40px;">
+              <div class="trail-card highlight">
+                <h4 style="color: #FFA080;">High Threshold ($t = 0.90$)</h4>
+                <p class="body-paragraph">
+                  "Only mark spam if 90% certain."
+                  <br>• <strong>High Precision:</strong> Very few False Positives.
+                  <br>• <strong>Lower Recall:</strong> Some spam will slip into inbox.
+                  <br><br>
+                  <em style="color: var(--accent-gold);">Ideal for spam filtering and fraud blocks.</em>
+                </p>
+              </div>
+
+              <div class="trail-card">
+                <h4>Low Threshold ($t = 0.30$)</h4>
+                <p class="body-paragraph">
+                  "Mark positive even if only mild suspicion."
+                  <br>• <strong>High Recall:</strong> Catches nearly all cases.
+                  <br>• <strong>Lower Precision:</strong> More False Positives.
+                  <br><br>
+                  <em style="color: var(--accent-gold);">Ideal for rare disease screening and security alarms.</em>
+                </p>
+              </div>
+            </div>
+
+            <p class="humor-note">
+              (Precision and Recall are on a playground seesaw: pushing one up naturally pushes the other down)
+            </p>
+          </div>
+        </div>
+
+        <div class="bottom-trail-icons">
+          <svg class="campfire-icon"><use href="#icon-campfire"/></svg>
+          <svg class="brain-icon"><use href="#icon-brain"/></svg>
+        </div>
+      </section>
+
+
+      <!-- ========================================================
+           SLIDE 24: Section Divider 6 (Matches PDF Page 16 "CTRL+ENTER TIME!")
+           ======================================================== -->
+      <section class="slide" id="slide-24">
+        <svg class="topo-lines"><use href="#topo-paths"/></svg>
+        <svg class="trees-left"><use href="#pine-trees"/></svg>
+        <svg class="trees-right" style="transform: scaleX(-1);"><use href="#pine-trees"/></svg>
+
+        <div class="divider-slide">
+          <div class="center-signpost">
+            <div class="post-top-icons">
+              <svg class="campfire-icon"><use href="#icon-campfire"/></svg>
+              <svg class="brain-icon"><use href="#icon-brain"/></svg>
+            </div>
+            
+            <div class="signpost-wood-column">
+              <div class="directional-sign">
+                CTRL+ENTER TIME!
+              </div>
+            </div>
+
+            <svg class="post-grass-tuft"><use href="#grass-tuft"/></svg>
+          </div>
+        </div>
+
+        <!-- Milestone Badge -->
+        <div class="milestone-badge">
+          <div class="milestone-pill">02</div>
+          <div class="milestone-post"></div>
+        </div>
+      </section>
+
+
+      <!-- ========================================================
+           SLIDE 25: The Capstone Challenge
+           ======================================================== -->
+      <section class="slide" id="slide-25">
+        <svg class="topo-lines"><use href="#topo-paths"/></svg>
+        <div class="hanging-header-container">
+          <div class="hanging-ropes"><div class="rope"></div><div class="rope"></div></div>
+          <div class="wood-plank">
+            <div class="wood-grain"></div>
+            <div class="plank-washer left"></div><div class="plank-washer right"></div>
+            CAPSTONE SCENARIO
+          </div>
+        </div>
+
+        <div class="slide-body">
+          <div class="content-area">
+            <h3 style="font-size: 38px; color: var(--accent-gold); font-family: 'Oswald', sans-serif; margin-bottom: 20px;">
+              CAMPUS EMAIL SYSTEM ARCHITECTURE CHALLENGE
+            </h3>
+
+            <div class="trail-list">
+              <div class="trail-list-item">
+                <span class="trail-num">Q1.</span>
+                <div class="trail-list-content">
+                  <h3>Which metric should the university president optimize?</h3>
+                  <p><strong>Answer:</strong> High Precision! A student missing their scholarship notification or exam timetable because of a False Positive is intolerable.</p>
+                </div>
+              </div>
+
+              <div class="trail-list-item">
+                <span class="trail-num">Q2.</span>
+                <div class="trail-list-content">
+                  <h3>How should the dataset be split?</h3>
+                  <p><strong>Answer:</strong> Stratified time-based split. Train on past months, test on the future month to prevent temporal leakage.</p>
+                </div>
+              </div>
+
+              <div class="trail-list-item">
+                <span class="trail-num">Q3.</span>
+                <div class="trail-list-content">
+                  <h3>Spammers start replacing words with emojis and images. What happened?</h3>
+                  <p><strong>Answer:</strong> Concept drift / covariate shift! The trained model's feature distribution no longer reflects reality. Retraining is mandatory.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bottom-trail-icons">
+          <svg class="campfire-icon"><use href="#icon-campfire"/></svg>
+          <svg class="brain-icon"><use href="#icon-brain"/></svg>
+        </div>
+      </section>
+
+
+      <!-- ========================================================
+           SLIDE 26: What to Remember (Framework / Rules of Thumb)
+           ======================================================== -->
+      <section class="slide" id="slide-26">
+        <svg class="topo-lines"><use href="#topo-paths"/></svg>
+        <div class="hanging-header-container">
+          <div class="hanging-ropes"><div class="rope"></div><div class="rope"></div></div>
+          <div class="wood-plank">
+            <div class="wood-grain"></div>
+            <div class="plank-washer left"></div><div class="plank-washer right"></div>
+            TRAIL RULES OF THUMB
+          </div>
+        </div>
+
+        <div class="slide-body">
+          <div class="content-area">
+            <div class="trail-list">
+              <div class="trail-list-item">
+                <span class="trail-num">01.</span>
+                <div class="trail-list-content">
+                  <h3>Inspect your feature space first</h3>
+                  <p>Plot your data in 2D or 3D. Check for class overlap, outlier noise (like point E10), and skewed distributions before picking an algorithm.</p>
+                </div>
+              </div>
+
+              <div class="trail-list-item">
+                <span class="trail-num">02.</span>
+                <div class="trail-list-content">
+                  <h3>Scale features for distance-based models</h3>
+                  <p>KNN and SVM will break if features have different units. Standardize features, but fit scalers ONLY on training folds.</p>
+                </div>
+              </div>
+
+              <div class="trail-list-item">
+                <span class="trail-num">03.</span>
+                <div class="trail-list-content">
+                  <h3>Pick the right metric for the business cost</h3>
+                  <p>Never rely solely on Accuracy. Evaluate Precision, Recall, and the Confusion Matrix based on real-world error costs.</p>
+                </div>
+              </div>
+
+              <div class="trail-list-item">
+                <span class="trail-num">04.</span>
+                <div class="trail-list-content">
+                  <h3>Treat threshold selection as a first-class engineering decision</h3>
+                  <p>0.5 is just a mathematical default. Tune $t$ to balance false alarms versus missed threats.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bottom-trail-icons">
+          <svg class="campfire-icon"><use href="#icon-campfire"/></svg>
+          <svg class="brain-icon"><use href="#icon-brain"/></svg>
+        </div>
+      </section>
+
+
+      <!-- ========================================================
+           SLIDE 27: Closing Slide (Matches PDF Page 17)
+           ======================================================== -->
+      <section class="slide" id="slide-27">
+        <svg class="topo-lines"><use href="#topo-paths"/></svg>
+        <svg class="trees-left"><use href="#pine-trees"/></svg>
+        <svg class="trees-right" style="transform: scaleX(-1);"><use href="#pine-trees"/></svg>
+
+        <div class="divider-slide">
+          <div class="center-signpost">
+            <div class="post-top-icons">
+              <svg class="campfire-icon"><use href="#icon-campfire"/></svg>
+              <svg class="brain-icon"><use href="#icon-brain"/></svg>
+            </div>
+            
+            <div class="signpost-wood-column">
+              <div class="directional-sign">
+                THANK YOU
+              </div>
+
+              <div class="sub-sign">
+                Any Questions ?
+              </div>
+            </div>
+
+            <svg class="post-grass-tuft"><use href="#grass-tuft"/></svg>
+          </div>
+        </div>
+
+        <!-- Milestone Badge -->
+        <div class="milestone-badge">
+          <div class="milestone-pill">04</div>
+          <div class="milestone-post"></div>
+        </div>
+      </section>
+
+    </div><!-- /#slide-viewport -->
+  </div><!-- /#deck-container -->
+
+
+  <!-- ─── HUD Navigation Controls ─── -->
+  <div id="hud-controls">
+    <button class="hud-btn" id="btn-prev" title="Previous Slide (← / P)">
+      <span>◀</span> Prev
+    </button>
+    <span class="hud-counter" id="slide-counter">01 / 27</span>
+    <button class="hud-btn" id="btn-next" title="Next Slide (→ / N / Space)">
+      Next <span>▶</span>
+    </button>
+    <div style="width: 1px; height: 18px; background: rgba(255,255,255,0.2);"></div>
+    <button class="hud-btn" id="btn-overview" title="Slide Overview (O / G)">
+      🗂️ Overview
+    </button>
+    <button class="hud-btn" id="btn-fs" title="Fullscreen (F)">
+      ⛶ Fullscreen
+    </button>
+    <button class="hud-btn" id="btn-print" title="Print to PDF (Ctrl+P)">
+      🖨️ Export PDF
+    </button>
+  </div>
+
+  <!-- ─── Slide Overview Drawer / Modal ─── -->
+  <div id="overview-modal">
+    <div class="overview-header">
+      <h2 style="font-family: 'Oswald', sans-serif; font-size: 36px; color: var(--accent-gold);">
+        TRAIL SLIDE OVERVIEW
+      </h2>
+      <button class="hud-btn" id="btn-close-overview" style="background: var(--wood-orange); color: #FFF; padding: 8px 18px;">
+        ✕ Close
+      </button>
+    </div>
+    <div class="overview-grid" id="overview-grid">
+      <!-- Injected by JavaScript -->
+    </div>
+  </div>
+
+
+  <!-- ─── Deck Engine Script ─── -->
+  <script>
+    const slides = Array.from(document.querySelectorAll('.slide'));
+    const totalSlides = slides.length;
+    let currentIndex = 0;
+
+    const viewport = document.getElementById('slide-viewport');
+    const counter = document.getElementById('slide-counter');
+    const prevBtn = document.getElementById('btn-prev');
+    const nextBtn = document.getElementById('btn-next');
+    const fsBtn = document.getElementById('btn-fs');
+    const printBtn = document.getElementById('btn-print');
+    const overviewBtn = document.getElementById('btn-overview');
+    const overviewModal = document.getElementById('overview-modal');
+    const closeOverviewBtn = document.getElementById('btn-close-overview');
+    const overviewGrid = document.getElementById('overview-grid');
+
+    // ─── Automatic Responsive Scaling to 16:9 Viewport ───
+    function resizeViewport() {
+      const windowWidth = window.innerWidth;
+      const windowHeight = window.innerHeight;
+      const targetWidth = 1920;
+      const targetHeight = 1080;
+
+      const scale = Math.min(windowWidth / targetWidth, windowHeight / targetHeight);
+      viewport.style.transform = `scale(${scale})`;
+    }
+
+    window.addEventListener('resize', resizeViewport);
+    resizeViewport();
+
+    // ─── Slide Navigation ───
+    function showSlide(index) {
+      if (index < 0) index = 0;
+      if (index >= totalSlides) index = totalSlides - 1;
+
+      slides[currentIndex].classList.remove('active');
+      currentIndex = index;
+      slides[currentIndex].classList.add('active');
+
+      const pad = (n) => String(n).padStart(2, '0');
+      counter.textContent = `${pad(currentIndex + 1)} / ${pad(totalSlides)}`;
+
+      // Update URL hash
+      window.location.hash = `#slide-${currentIndex + 1}`;
+
+      // Re-trigger math render if needed
+      if (window.renderMathInElement) {
+        renderMathInElement(slides[currentIndex], {
+          delimiters: [
+            { left: '$$', right: '$$', display: true },
+            { left: '$', right: '$', display: false }
+          ]
+        });
+      }
+    }
+
+    function nextSlide() { showSlide(currentIndex + 1); }
+    function prevSlide() { showSlide(currentIndex - 1); }
+
+    prevBtn.addEventListener('click', prevSlide);
+    nextBtn.addEventListener('click', nextSlide);
+
+    // ─── Keyboard Controls ───
+    window.addEventListener('keydown', (e) => {
+      if (overviewModal.classList.contains('open')) {
+        if (e.key === 'Escape') toggleOverview(false);
+        return;
+      }
+
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown' || e.key === 'n' || e.key === 'N') {
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp' || e.key === 'p' || e.key === 'P') {
+        prevSlide();
+      } else if (e.key === 'Home') {
+        showSlide(0);
+      } else if (e.key === 'End') {
+        showSlide(totalSlides - 1);
+      } else if (e.key === 'f' || e.key === 'F') {
+        toggleFullscreen();
+      } else if (e.key === 'o' || e.key === 'O' || e.key === 'g' || e.key === 'G') {
+        toggleOverview(true);
+      }
+    });
+
+    // ─── Fullscreen Toggle ───
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    }
+    fsBtn.addEventListener('click', toggleFullscreen);
+
+    // ─── Print / Export to PDF ───
+    printBtn.addEventListener('click', () => {
+      window.print();
+    });
+
+    // ─── Overview Drawer ───
+    function buildOverview() {
+      overviewGrid.innerHTML = '';
+      slides.forEach((slide, idx) => {
+        const card = document.createElement('div');
+        card.className = `overview-card ${idx === currentIndex ? 'active' : ''}`;
+        
+        let title = `Slide ${idx + 1}`;
+        const plank = slide.querySelector('.wood-plank, .directional-sign');
+        if (plank) title = plank.innerText.trim().replace(/\n/g, ' ');
+
+        card.innerHTML = `
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--wood-orange); font-weight: 700; margin-bottom: 6px;">
+            #${String(idx + 1).padStart(2, '0')}
+          </div>
+          <div style="font-family: 'Oswald', sans-serif; font-size: 18px; color: var(--text-cream); line-height: 1.2;">
+            ${title}
+          </div>
+        `;
+
+        card.addEventListener('click', () => {
+          showSlide(idx);
+          toggleOverview(false);
+        });
+
+        overviewGrid.appendChild(card);
+      });
+    }
+
+    function toggleOverview(open) {
+      if (open) {
+        buildOverview();
+        overviewModal.classList.add('open');
+      } else {
+        overviewModal.classList.remove('open');
+      }
+    }
+
+    overviewBtn.addEventListener('click', () => toggleOverview(true));
+    closeOverviewBtn.addEventListener('click', () => toggleOverview(false));
+
+    // ─── KaTeX Rendering Helper ───
+    function renderMath() {
+      if (window.renderMathInElement) {
+        renderMathInElement(document.body, {
+          delimiters: [
+            { left: '$$', right: '$$', display: true },
+            { left: '$', right: '$', display: false }
+          ],
+          throwOnError: false
+        });
+      }
+    }
+
+    // Check initial hash
+    if (window.location.hash) {
+      const match = window.location.hash.match(/slide-(\d+)/);
+      if (match) {
+        const target = parseInt(match[1], 10) - 1;
+        if (target >= 0 && target < totalSlides) {
+          showSlide(target);
+        }
+      }
+    }
+  </script>
+</body>
+</html>

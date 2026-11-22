@@ -1,483 +1,486 @@
 'use client';
 
-import { useState } from 'react';
+import React from 'react';
 import {
   SectionHeader,
-  ThoughtPrompt,
   CompareTable,
   Callout,
   KeyInsight,
-  MathFormula,
 } from '@/components/ui/ConceptCard';
-import { Quiz } from '@/components/ui/Quiz';
-import { figure2SpamTree, decisionTree, shallowTree, traverseTree } from '@/lib/decisionTree';
-
-const splitTableRows = [
-  ['Left subset', '4 emails (3 Not Spam, 1 Spam)', '1 - (3/4)² - (1/4)² = 1 - 0.5625 - 0.0625 = 0.375'],
-  ['Right subset', '6 emails (2 Not Spam, 4 Spam)', '1 - (2/6)² - (4/6)² = 1 - 0.111 - 0.444 ≈ 0.444'],
-  ['Weighted Gini', '10 emails total', '(4/10)(0.375) + (6/10)(0.444) = 0.150 + 0.266 = 0.417'],
-];
+import { MathBlock, MathInline } from '@/components/ui/KatexFormula';
+import { ExternalImageCard } from '@/components/ui/ExternalImageCard';
+import {
+  ThresholdDemoWidget,
+  ConfusionMatrixLiveWidget,
+} from '@/components/interactive/CurriculumVisuals';
+import {
+  Sliders,
+  CheckCircle2,
+  AlertTriangle,
+  Clock,
+  RefreshCw,
+  ShieldCheck,
+  ShieldAlert,
+} from 'lucide-react';
 
 export default function Part4() {
-  const [activeTab, setActiveTab] = useState<'conceptual' | 'numerical'>('conceptual');
-  const [treeDepth, setTreeDepth] = useState<number>(2);
-  const [testLinks, setTestLinks] = useState<number>(2);
-  const [testWords, setTestWords] = useState<number>(3);
-  const [showEntropy, setShowEntropy] = useState<boolean>(false);
-
-  // 5-step lab state
-  const [labStep, setLabStep] = useState<number>(1);
-  const [predictionHypothesis, setPredictionHypothesis] = useState('');
-
-  const currentTree = treeDepth === 1 ? shallowTree : decisionTree;
-  const traversal = traverseTree(testLinks, testWords, currentTree);
-
   return (
-    <div className="max-w-4xl mx-auto px-4 md:px-6 py-6 space-y-10">
+    <div className="max-w-4xl mx-auto px-4 md:px-6 py-6 space-y-12">
+      {/* ─── Part Header ─── */}
       <SectionHeader
         part={4}
-        time="Session 1 · 38–50 min"
-        title="Decision Trees"
-        subtitle="Hierarchical Splits, Gini Impurity, Axis-Aligned Boundaries & Depth"
+        time="Part IV · Slides 22–26"
+        title="Part IV — Making and evaluating classification decisions"
+        subtitle="Classification thresholds, error types (TP, FP, FN, TN), the Confusion Matrix, and metrics calculation."
       />
 
-      {/* 4.1 Start with human reasoning */}
-      <section className="space-y-4">
-        <div>
-          <span className="font-pixel text-[10px] uppercase font-bold text-[#FF2E7E] tracking-wider block mb-1">
-            SECTION 4.1
+      {/* ─────────────────────────────────────────────────────────────
+          SLIDE 22 — What is a classification threshold?
+         ───────────────────────────────────────────────────────────── */}
+      <section id="slide-22" className="space-y-5 rounded-2xl border-2 border-[#F0D6E2] bg-white p-6 shadow-xs">
+        <div className="flex items-center justify-between border-b border-[#F0D6E2] pb-3">
+          <div className="flex items-center gap-2.5">
+            <span className="font-pixel text-xs px-2.5 py-1 rounded-full bg-[#FFE4EF] text-[#F59E0B] font-bold border border-[#FFB8D2]">
+              SLIDE 22
+            </span>
+            <h2 className="text-xl md:text-2xl font-extrabold text-[#1A1020]">
+              What is a classification threshold?
+            </h2>
+          </div>
+          <span className="text-xs font-mono font-semibold text-[#6D5970] bg-[#FFF0F6] px-2.5 py-1 rounded-full border border-[#FFB8D2]">
+            Decision Threshold
           </span>
-          <h2 className="text-xl font-extrabold text-[#1A1020]">
-            Start with Human Reasoning
-          </h2>
         </div>
 
-        <div className="rounded-2xl border-2 border-[#FFB8D2] bg-[#FFF7FA] p-5 shadow-sm space-y-2">
-          <div className="flex items-center gap-2">
-            <span className="font-pixel text-[10px] px-2.5 py-0.5 rounded-full bg-[#FF2E7E] text-white font-bold">
-              ASK THE STUDENTS
-            </span>
-            <h3 className="font-bold text-sm text-[#1A1020]">Intuitive Email Triage</h3>
-          </div>
-          <p className="text-sm text-[#2D1F33]">
-            &ldquo;If you were personally deciding whether an incoming email was spam, what sequential questions would you ask?&rdquo;
+        {/* Slide Content */}
+        <div className="space-y-3 text-sm text-[#4A3B4E] leading-relaxed">
+          <p>
+            Some classification algorithms produce a probability estimate rather than directly returning a class.
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 text-xs text-[#4A3B4E]">
-            <div className="p-2.5 rounded-lg bg-white border border-[#F0D6E2]">
-              &bull; &ldquo;Does the email contain a suspicious URL?&rdquo;
-            </div>
-            <div className="p-2.5 rounded-lg bg-white border border-[#F0D6E2]">
-              &bull; &ldquo;Is the sender completely unknown to the user?&rdquo;
-            </div>
-            <div className="p-2.5 rounded-lg bg-white border border-[#F0D6E2]">
-              &bull; &ldquo;Does the body demand immediate urgent action?&rdquo;
-            </div>
-            <div className="p-2.5 rounded-lg bg-white border border-[#F0D6E2]">
-              &bull; &ldquo;Does it ask for passwords or credit card numbers?&rdquo;
-            </div>
-          </div>
-        </div>
+          <p>
+            For example, a binary classifier might estimate:
+          </p>
+          <MathBlock formula="P(\text{Spam} \mid x) = 0.72" label="Estimated Posterior Probability" />
+          <p className="font-semibold text-[#1A1020]">
+            How do we turn this probability into a category? We use a decision threshold.
+          </p>
 
-        <p className="text-sm text-[#4A3B4E] leading-relaxed">
-          A <strong>Decision Tree</strong> mimics this intuitive human process: it learns a hierarchical sequence
-          of questions that partition observations into increasingly homogeneous (pure) subsets. It functions like a
-          rigorous flowchart.
-        </p>
-      </section>
-
-      {/* 4.2 Anatomy of a tree */}
-      <section className="space-y-4">
-        <div>
-          <span className="font-pixel text-[10px] uppercase font-bold text-[#FF2E7E] tracking-wider block mb-1">
-            SECTION 4.2
-          </span>
-          <h2 className="text-xl font-extrabold text-[#1A1020]">
-            Anatomy of a Decision Tree (Figure 2)
-          </h2>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-          <div className="p-3 rounded-xl bg-white border border-[#F0D6E2]">
-            <span className="font-bold text-[#FF2E7E] block mb-1">Root Node</span>
-            <p className="text-[#6D5970]">The very first question evaluated on all observations.</p>
-          </div>
-          <div className="p-3 rounded-xl bg-white border border-[#F0D6E2]">
-            <span className="font-bold text-[#1A1020] block mb-1">Internal Nodes</span>
-            <p className="text-[#6D5970]">Subsequent conditional decision tests.</p>
-          </div>
-          <div className="p-3 rounded-xl bg-white border border-[#F0D6E2]">
-            <span className="font-bold text-[#1A1020] block mb-1">Branches</span>
-            <p className="text-[#6D5970]">Outcome paths (e.g. Yes / No or &le; 3.5 / &gt; 3.5).</p>
-          </div>
-          <div className="p-3 rounded-xl bg-white border border-[#F0D6E2]">
-            <span className="font-bold text-[#059669] block mb-1">Leaf Nodes</span>
-            <p className="text-[#6D5970]">Terminal endpoints containing the final predicted class.</p>
-          </div>
-        </div>
-
-        {/* Figure 2 Interactive Visual Diagram */}
-        <div className="rounded-2xl border-2 border-[#FFD6E5] bg-white p-6 shadow-sm space-y-4">
-          <div className="flex items-center justify-between">
-            <span className="font-pixel text-xs text-[#FF2E7E] font-bold">
-              FIGURE 2 · THE EMAIL SPAM TREE FLOWCHART
-            </span>
-            <span className="text-[11px] font-mono text-[#6D5970]">All leaves are real classes</span>
+          <div className="p-4 rounded-xl border-2 border-[#FFD6E5] bg-[#FFF7FA] space-y-2">
+            <h4 className="font-bold text-sm text-[#96003B]">Definition of Classification Threshold</h4>
+            <p className="text-xs md:text-sm text-[#4A3B4E] leading-relaxed">
+              A <strong>classification threshold</strong> is a predefined cutoff value used to convert a predicted probability into a class decision.
+            </p>
+            <p className="text-xs text-[#1A1020]">
+              For binary classification, if the threshold is <MathInline formula="t" />:
+            </p>
+            <MathBlock
+              formula="\hat{y} = \begin{cases} 1 & \text{if } P(y=1 \mid x) \geq t \\ 0 & \text{otherwise} \end{cases}"
+              label="Piecewise Threshold Decision Rule"
+            />
           </div>
 
-          <div className="flex flex-col items-center space-y-4 max-w-md mx-auto py-2">
-            {/* Root Node */}
-            <div className="px-5 py-2.5 rounded-xl bg-[#1A1020] text-white font-mono text-xs font-bold text-center shadow-md">
-              Suspicious link?
-            </div>
-
-            {/* Split branches */}
-            <div className="w-full flex justify-between items-start px-8">
-              {/* Left Branch */}
-              <div className="flex flex-col items-center space-y-2">
-                <span className="text-xs font-bold text-[#6D5970] font-mono">No ↓</span>
-                <div className="px-4 py-2 rounded-xl bg-[#ECFDF5] border-2 border-[#10B981] text-[#059669] font-mono text-xs font-bold shadow-sm">
-                  NOT SPAM
-                </div>
+          <div className="space-y-2 pt-2">
+            <h4 className="font-bold text-xs uppercase text-[#6D5970] tracking-wider font-mono">
+              Concrete Threshold Comparison: P(Spam | x) = 0.72
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+              <div className="p-3 bg-white rounded-lg border-2 border-[#FF2E7E]">
+                <strong className="text-[#FF2E7E] block mb-1">With a threshold of 0.5:</strong>
+                <p className="font-mono text-[11px] mb-1">0.72 ≥ 0.5</p>
+                <p className="font-bold text-[#1A1020]">
+                  The predicted class is <span className="text-[#FF2E7E]">Spam (1)</span>.
+                </p>
               </div>
 
-              {/* Right Branch */}
-              <div className="flex flex-col items-center space-y-2">
-                <span className="text-xs font-bold text-[#6D5970] font-mono">Yes ↓</span>
-                <div className="px-4 py-2.5 rounded-xl bg-[#FFF0F6] border-2 border-[#FF2E7E] text-[#1A1020] font-mono text-xs font-bold text-center shadow-sm">
-                  Unknown sender?
-                </div>
-
-                {/* Sub branches */}
-                <div className="w-full flex justify-between gap-4 pt-2">
-                  <div className="flex flex-col items-center">
-                    <span className="text-[10px] font-bold text-[#6D5970]">No ↓</span>
-                    <div className="px-2.5 py-1.5 rounded-lg bg-[#ECFDF5] border border-[#10B981] text-[#059669] font-mono text-[11px] font-bold">
-                      NOT SPAM
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <span className="text-[10px] font-bold text-[#6D5970]">Yes ↓</span>
-                    <div className="px-2.5 py-1.5 rounded-lg bg-[#FFE4EF] border border-[#FF2E7E] text-[#FF2E7E] font-mono text-[11px] font-bold">
-                      SPAM
-                    </div>
-                  </div>
-                </div>
+              <div className="p-3 bg-white rounded-lg border-2 border-blue-400">
+                <strong className="text-blue-600 block mb-1">With a threshold of 0.8:</strong>
+                <p className="font-mono text-[11px] mb-1">0.72 &lt; 0.8</p>
+                <p className="font-bold text-[#1A1020]">
+                  The predicted class is <span className="text-blue-600">Not Spam (0)</span>.
+                </p>
               </div>
             </div>
           </div>
-
-          <Callout type="info" title="Teacher Note: Leaf Node Realism">
-            The original notes sketched a leaf called &ldquo;Review&rdquo;. In supervised classification,
-            <strong> leaf nodes must always represent real, valid class categories</strong> (Spam or Not Spam).
-            A classifier cannot output an undefined &ldquo;Review&rdquo; state unless &ldquo;Review&rdquo; was explicitly trained as a class.
-          </Callout>
-        </div>
-      </section>
-
-      {/* 4.3 How does the tree choose its questions? */}
-      <section className="space-y-4">
-        <div>
-          <span className="font-pixel text-[10px] uppercase font-bold text-[#FF2E7E] tracking-wider block mb-1">
-            SECTION 4.3
-          </span>
-          <h2 className="text-xl font-extrabold text-[#1A1020]">
-            How Does the Tree Choose Its Questions? Gini Impurity
-          </h2>
         </div>
 
-        <p className="text-sm text-[#4A3B4E] leading-relaxed">
-          A tree searches through candidate splits using <strong>impurity</strong>.
-          Consider a pool of 10 emails: <strong>5 Spam, 5 Not Spam</strong>. This parent set is completely mixed.
-          We want to find questions that split the data into subsets that are as homogeneous (pure) as possible.
-        </p>
+        {/* Interactive Threshold Slider Demo */}
+        <ThresholdDemoWidget />
 
-        <MathFormula formula="\text{Gini} = 1 - \sum_{k=1}^C p_k^2 \qquad (p_k = \text{proportion of class } k)" label="Gini Impurity Formula" />
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-          <div className="p-3.5 rounded-xl bg-white border border-[#F0D6E2] space-y-1">
-            <span className="font-bold text-[#FF2E7E]">For the 5/5 Parent Group:</span>
-            <div className="font-mono bg-[#FFF7FA] p-2 rounded text-[#96003B]">
-              Gini = 1 - (0.5)² - (0.5)² = 1 - 0.25 - 0.25 = 0.500
-            </div>
-            <p className="text-[#6D5970]">0.5 is the maximal impurity possible for a binary classification setting.</p>
+        {/* Explanation */}
+        <Callout type="info" title="Explanation">
+          <div className="space-y-2 text-xs md:text-sm">
+            <p>
+              The threshold determines how much evidence the model needs before assigning an observation to the positive class:
+            </p>
+            <ul className="list-disc pl-5 space-y-1 text-xs">
+              <li>A <strong>lower threshold</strong> makes the classifier more willing to predict the positive class.</li>
+              <li>A <strong>higher threshold</strong> makes the classifier more conservative.</li>
+            </ul>
+            <KeyInsight>
+              This means that <strong>changing the threshold can change the predictions even when the trained model remains exactly the same</strong>.
+            </KeyInsight>
+            <p>
+              The choice of threshold depends on the application and the consequences of different types of mistakes. For example, in medical screening, we may prefer a threshold that identifies more potentially positive cases, even if that means some healthy individuals are incorrectly flagged.
+            </p>
           </div>
-          <div className="p-3.5 rounded-xl bg-white border border-[#F0D6E2] space-y-1">
-            <span className="font-bold text-[#059669]">For a Completely Pure Group (All Spam):</span>
-            <div className="font-mono bg-[#ECFDF5] p-2 rounded text-[#059669]">
-              Gini = 1 - (1.0)² - (0.0)² = 1 - 1.0 = 0.000
-            </div>
-            <p className="text-[#6D5970]">0.0 indicates absolute homogeneity; no further splitting is required.</p>
-          </div>
-        </div>
-
-        {/* Worked Split Table */}
-        <div className="rounded-2xl border border-[#F0D6E2] bg-white p-5 shadow-sm space-y-3">
-          <span className="font-bold text-sm text-[#1A1020] block">
-            Worked Numerical Split (10 Emails Divided by Candidate Question):
-          </span>
-          <CompareTable
-            headers={['Group Partition', 'Class Counts', 'Gini Impurity Calculation']}
-            rows={splitTableRows}
-            highlight={[2]}
-          />
-          <div className="p-3 rounded-xl bg-[#FFF9FC] border border-[#FFD6E5] text-xs text-[#2D1F33]">
-            <strong>Impurity Reduction:</strong> Gini dropped from <code className="font-bold text-[#1A1020]">0.500</code> down
-            to <code className="font-bold text-[#1A1020]">0.417</code>, yielding an impurity reduction (Information Gain)
-            of <code className="font-bold text-[#FF2E7E]">0.083</code>.
-            The algorithm tests every possible feature threshold and selects the split that delivers the largest impurity drop!
-          </div>
-
-          <div className="pt-2">
-            <button
-              onClick={() => setShowEntropy((p) => !p)}
-              className="text-xs font-bold text-[#FF2E7E] hover:underline"
-            >
-              {showEntropy ? 'Hide Entropy alternative' : 'Show alternative criterion: Shannon Entropy'}
-            </button>
-            {showEntropy && (
-              <div className="mt-2 p-3 bg-[#FFF7FA] rounded-xl border border-[#FFB8D2] text-xs text-[#4A3B4E] space-y-1">
-                <span className="font-bold text-[#1A1020]">Information Gain via Entropy:</span>
-                <MathFormula formula="\text{Entropy}(S) = -\sum_{k=1}^C p_k \log_2(p_k)" />
-                <p>For a 50/50 split, Entropy = - (0.5 · (-1) + 0.5 · (-1)) = 1.0 bit. For pure nodes, Entropy = 0.</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* 4.4 Decision Tree Lab */}
-      <section className="space-y-4">
-        <div>
-          <span className="font-pixel text-[10px] uppercase font-bold text-[#FF2E7E] tracking-wider block mb-1">
-            SECTION 4.4 · INTERACTIVE LAB
-          </span>
-          <h2 className="text-xl font-extrabold text-[#1A1020]">
-            Interactive Decision Tree Simulator
-          </h2>
-        </div>
-
-        {/* 5-Step Simulator */}
-        <div className="grid grid-cols-5 gap-1.5 text-center font-mono text-xs">
-          {[
-            { step: 1, name: '1. Predict' },
-            { step: 2, name: '2. Experiment' },
-            { step: 3, name: '3. Observe' },
-            { step: 4, name: '4. Explain' },
-            { step: 5, name: '5. Apply' },
-          ].map((s) => (
-            <button
-              key={s.step}
-              onClick={() => setLabStep(s.step)}
-              className={`py-2 px-1 rounded-xl font-bold transition-all ${
-                labStep === s.step
-                  ? 'bg-[#FF2E7E] text-white shadow-sm'
-                  : 'bg-white border border-[#F0D6E2] text-[#6D5970] hover:text-[#1A1020]'
-              }`}
-            >
-              {s.name}
-            </button>
-          ))}
-        </div>
-
-        <div className="rounded-2xl border-2 border-[#FFD6E5] bg-white p-5 shadow-sm space-y-4">
-          {labStep === 1 && (
-            <div className="space-y-3">
-              <span className="font-pixel text-xs text-[#FF2E7E] font-bold">
-                STEP 1 · PREDICT BEFORE ADJUSTING DEPTH
-              </span>
-              <p className="text-xs text-[#4A3B4E]">
-                &ldquo;If I double the maximum tree depth from 1 (shallow stump) to 5 (deep tree),
-                will <strong>training accuracy</strong> go up or down? What will happen to <strong>test accuracy</strong> on new noisy emails?&rdquo;
-              </p>
-              <input
-                type="text"
-                placeholder="Write your prediction here..."
-                value={predictionHypothesis}
-                onChange={(e) => setPredictionHypothesis(e.target.value)}
-                className="w-full text-xs p-3 rounded-xl border border-[#F0D6E2] focus:border-[#FF2E7E] focus:outline-none"
-              />
-              <button onClick={() => setLabStep(2)} className="btn-pink px-4 py-1.5 text-xs font-bold">
-                Advance to Step 2: Test Interactive Tree →
-              </button>
-            </div>
-          )}
-
-          {labStep >= 2 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-              {/* Path Tracer */}
-              <div className="p-4 rounded-xl bg-[#FFF9FC] border border-[#F0D6E2] space-y-3 text-xs">
-                <span className="font-bold text-[#1A1020] block">
-                  Interactive Evaluation: Email (Links={testLinks}, Words={testWords})
-                </span>
-
-                <div className="space-y-1.5 font-mono text-[11px]">
-                  {traversal.steps.map((st, idx) => (
-                    <div
-                      key={idx}
-                      className="p-2 rounded bg-white border border-[#F0D6E2] flex items-center justify-between"
-                    >
-                      <span>
-                        {st.node.question ?? `Leaf: ${st.node.label?.toUpperCase()}`}
-                      </span>
-                      <span className="font-bold text-[#FF2E7E]">{st.path}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="p-3 rounded-lg bg-[#FFE4EF] border border-[#FFB8D2] flex items-center justify-between font-bold">
-                  <span>Final Tree Output:</span>
-                  <span className="text-[#FF2E7E] font-mono text-sm uppercase">
-                    {traversal.prediction}
-                  </span>
-                </div>
-              </div>
-
-              {/* Controls */}
-              <div className="space-y-4 text-xs">
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-bold text-[#1A1020]">Tree Complexity (Max Depth):</span>
-                    <span className="font-mono font-bold text-[#FF2E7E]">{treeDepth === 1 ? '1 (Shallow)' : 'Full (Depth 3)'}</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setTreeDepth(1)}
-                      className={`flex-1 py-1.5 rounded-lg font-bold text-xs ${
-                        treeDepth === 1 ? 'bg-[#FF2E7E] text-white' : 'bg-white border text-[#6D5970]'
-                      }`}
-                    >
-                      Depth = 1 (Stump)
-                    </button>
-                    <button
-                      onClick={() => setTreeDepth(3)}
-                      className={`flex-1 py-1.5 rounded-lg font-bold text-xs ${
-                        treeDepth === 3 ? 'bg-[#FF2E7E] text-white' : 'bg-white border text-[#6D5970]'
-                      }`}
-                    >
-                      Depth = 3 (Full Tree)
-                    </button>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="font-bold text-[#1A1020] block mb-1">Test Email Links: {testLinks}</label>
-                    <input
-                      type="range"
-                      min={0}
-                      max={7}
-                      value={testLinks}
-                      onChange={(e) => setTestLinks(parseInt(e.target.value, 10))}
-                      className="w-full accent-[#FF2E7E]"
-                    />
-                  </div>
-                  <div>
-                    <label className="font-bold text-[#1A1020] block mb-1">Test Email Words: {testWords}</label>
-                    <input
-                      type="range"
-                      min={0}
-                      max={7}
-                      value={testWords}
-                      onChange={(e) => setTestWords(parseInt(e.target.value, 10))}
-                      className="w-full accent-[#FF2E7E]"
-                    />
-                  </div>
-                </div>
-
-                {labStep < 5 && (
-                  <button
-                    onClick={() => setLabStep((s) => s + 1)}
-                    className="btn-pink px-4 py-1.5 text-xs font-bold"
-                  >
-                    Next Lab Step ({labStep + 1}) →
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
-
-          {labStep === 3 && (
-            <div className="p-3 bg-[#F0FDF4] border border-[#BBF7D0] rounded-xl text-xs text-[#166534]">
-              <strong>Step 3 (Observe):</strong> A shallow tree makes few decisions: simple, easily explained, but may underfit. An unconstrained deep tree carves isolated boxes around every training outlier.
-            </div>
-          )}
-
-          {labStep === 4 && (
-            <div className="p-3 bg-[#FFF7FA] border border-[#FFB8D2] rounded-xl text-xs text-[#96003B]">
-              <strong>Step 4 (Explain):</strong> Because each split tests a single feature against a scalar threshold, Decision Tree boundaries are <em>axis-aligned</em> (forming right-angle staircases), unlike KNN’s curvilinear contours.
-            </div>
-          )}
-
-          {labStep === 5 && (
-            <div className="p-3 bg-[#EFF6FF] border border-[#BFDBFE] rounded-xl text-xs text-[#1E40AF]">
-              <strong>Step 5 (Apply):</strong> In high-stakes regulatory environments (like loan approvals or medical triage), trees are favored because each branch provides an auditable &ldquo;if-then&rdquo; rationale.
-            </div>
-          )}
-        </div>
-
-        <Callout type="tip" title="Improvement Added: Strengths and Limits of Trees">
-          <ul className="space-y-1 text-xs list-disc list-inside">
-            <li><strong>Strengths:</strong> Highly interpretable; invariant to feature scaling (no standardization needed).</li>
-            <li><strong>Limits:</strong> Individual deep trees are high-variance and unstable (a slight shift in training rows can dramatically change the tree structure).</li>
-            <li><strong>Complexity controls:</strong> Hyperparameters like <code className="bg-white px-1 border rounded">max_depth</code> and <code className="bg-white px-1 border rounded">min_samples_leaf</code> prevent runaway memorization.</li>
-          </ul>
         </Callout>
-
-        <div className="rounded-2xl border border-[#FED7AA] bg-[#FFFBEB] p-4 text-xs text-[#92400E] space-y-1">
-          <span className="font-pixel text-[9px] bg-[#FEF3C7] px-2 py-0.5 rounded text-[#D97706] font-bold">
-            CHECKPOINT QUESTION
-          </span>
-          <p className="font-bold text-[#1A1020]">
-            &ldquo;Does a Decision Tree calculate geometric distances between observations like KNN?&rdquo;
-          </p>
-          <p className="text-[#4A3B4E]">
-            <strong>No!</strong> Decision Trees do not compute vector distances. They partition feature space using
-            threshold inequalities (<code className="bg-white px-1 border rounded">feature &le; threshold</code>) based on impurity reduction.
-          </p>
-        </div>
       </section>
 
-      <Quiz
-        partNumber={4}
-        questions={[
-          {
-            question: 'What does a Gini impurity of 0.0 indicate for a decision tree node?',
-            options: [
-              'The node is completely pure; all observations in it belong to the exact same class.',
-              'The node has an even 50/50 split of classes.',
-              'The tree has encountered a division by zero error.',
-              'The node must be deleted.',
-            ],
-            correctIndex: 0,
-            explanation:
-              'Gini = 1 - sum(p_k^2). When all observations belong to class 1, Gini = 1 - 1.0^2 = 0.0, indicating complete purity.',
-          },
-          {
-            question: 'Why do decision tree decision boundaries look like orthogonal staircases rather than smooth curves?',
-            options: [
-              'Because each split evaluates a single feature against a scalar threshold parallel to the coordinate axes.',
-              'Because decision trees only operate on integer numbers.',
-              'Because Gini impurity is a non-linear metric.',
-              'Because decision trees use Euclidean distance.',
-            ],
-            correctIndex: 0,
-            explanation:
-              'Each decision rule tests whether one feature is <= threshold, producing perpendicular axis-aligned boundaries in feature space.',
-          },
-          {
-            question: 'Do Decision Trees require feature standardization (z-score scaling)?',
-            options: [
-              'No, because monotonic splits only depend on the rank ordering of values within each individual feature.',
-              'Yes, because distance between thresholds will distort the tree.',
-              'Yes, otherwise Gini impurity cannot be calculated.',
-              'Only when using Entropy instead of Gini.',
-            ],
-            correctIndex: 0,
-            explanation:
-              'Trees only ask whether feature x_j <= threshold. Rescaling a feature by adding or multiplying by constants does not change the ordering or relative split quality.',
-          },
-        ]}
-      />
+      {/* ─────────────────────────────────────────────────────────────
+          SLIDE 23 — Understanding classification errors
+         ───────────────────────────────────────────────────────────── */}
+      <section id="slide-23" className="space-y-5 rounded-2xl border-2 border-[#F0D6E2] bg-white p-6 shadow-xs">
+        <div className="flex items-center justify-between border-b border-[#F0D6E2] pb-3">
+          <div className="flex items-center gap-2.5">
+            <span className="font-pixel text-xs px-2.5 py-1 rounded-full bg-[#FFE4EF] text-[#F59E0B] font-bold border border-[#FFB8D2]">
+              SLIDE 23
+            </span>
+            <h2 className="text-xl md:text-2xl font-extrabold text-[#1A1020]">
+              Understanding classification errors
+            </h2>
+          </div>
+          <span className="text-xs font-mono font-semibold text-[#6D5970] bg-[#FFF0F6] px-2.5 py-1 rounded-full border border-[#FFB8D2]">
+            Error Types
+          </span>
+        </div>
+
+        {/* Slide Content */}
+        <div className="space-y-3 text-sm text-[#4A3B4E] leading-relaxed">
+          <p>
+            A classifier can make two important types of mistakes in binary classification.
+          </p>
+          <p>Consider a spam detection system with two possible actual classes (Spam, Not Spam) and two possible predicted classes (Predicted Spam, Predicted Not Spam). Combining these gives four possible outcomes:</p>
+
+          <CompareTable
+            headers={['Actual Class', 'Predicted Class', 'Result']}
+            rows={[
+              ['Spam', 'Spam', 'True Positive (TP)'],
+              ['Not Spam', 'Spam', 'False Positive (FP)'],
+              ['Spam', 'Not Spam', 'False Negative (FN)'],
+              ['Not Spam', 'Not Spam', 'True Negative (TN)'],
+            ]}
+          />
+
+          <div className="space-y-3 pt-2">
+            <h4 className="font-bold text-xs uppercase text-[#6D5970] tracking-wider font-mono">
+              Detailed Explanations & Real-World Impact
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+              <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200">
+                <strong className="text-emerald-900 block mb-1">True Positive (TP):</strong>
+                The email is actually Spam, and the model correctly predicts Spam.
+              </div>
+              <div className="p-3 bg-rose-50 rounded-xl border border-rose-200">
+                <strong className="text-rose-900 block mb-1">False Positive (FP):</strong>
+                The email is actually Not Spam, but the model incorrectly predicts Spam.
+                <p className="text-rose-800 font-semibold mt-1">
+                  Consequence: A legitimate email is incorrectly flagged and buried in spam.
+                </p>
+              </div>
+              <div className="p-3 bg-amber-50 rounded-xl border border-amber-200">
+                <strong className="text-amber-900 block mb-1">False Negative (FN):</strong>
+                The email is actually Spam, but the model incorrectly predicts Not Spam.
+                <p className="text-amber-800 font-semibold mt-1">
+                  Consequence: A spam email passes through the filter into the inbox.
+                </p>
+              </div>
+              <div className="p-3 bg-blue-50 rounded-xl border border-blue-200">
+                <strong className="text-blue-900 block mb-1">True Negative (TN):</strong>
+                The email is actually Not Spam, and the model correctly predicts Not Spam.
+              </div>
+            </div>
+          </div>
+
+          <ExternalImageCard
+            src="https://images.openai.com/static-rsc-4/xpkaNIzcwRUhd-zBzRfMTywCaCThC8r2-5WDfdG2nC35_h58QSYoD6Wh4IP8cTMcJzOqyrGT8dCN8R1iYpCESXePAGNxajJX-VSyI3Jv4lGhrYNRUTY6_je7QSqKZP0cd1nZvBR-j-1Uu02DNQOtTdvDNhce4xC5gP7QyHcCoYg?purpose=inline"
+            title="Confusion Matrix Explained (With Python Code & Metrics) by Soumodeep Santra"
+            sourceUrl="https://medium.com/%40soumodeepsantra5/confusion-matrix-explained-with-python-code-metrics-f4d78337d3f5?utm_source=chatgpt.com"
+            sourceLabel="medium.com"
+            caption="The 2x2 error matrix layout: Actual vs. Predicted classifications."
+          />
+        </div>
+
+        {/* Explanation */}
+        <Callout type="info" title="Explanation">
+          <div className="space-y-2 text-xs md:text-sm">
+            <p>
+              The words <strong>True</strong> and <strong>False</strong> describe whether the prediction is correct. <strong>Positive</strong> and <strong>Negative</strong> refer to the predicted or actual class.
+            </p>
+            <p>
+              It is important to establish which class is considered positive before interpreting the matrix. For spam detection, we choose Spam as the positive class.
+            </p>
+            <p>
+              The same convention can be applied to fraud detection, medical screening and other binary classification tasks.
+            </p>
+          </div>
+        </Callout>
+      </section>
+
+      {/* ─────────────────────────────────────────────────────────────
+          SLIDE 24 — The confusion matrix
+         ───────────────────────────────────────────────────────────── */}
+      <section id="slide-24" className="space-y-5 rounded-2xl border-2 border-[#F0D6E2] bg-white p-6 shadow-xs">
+        <div className="flex items-center justify-between border-b border-[#F0D6E2] pb-3">
+          <div className="flex items-center gap-2.5">
+            <span className="font-pixel text-xs px-2.5 py-1 rounded-full bg-[#FFE4EF] text-[#F59E0B] font-bold border border-[#FFB8D2]">
+              SLIDE 24
+            </span>
+            <h2 className="text-xl md:text-2xl font-extrabold text-[#1A1020]">
+              The confusion matrix
+            </h2>
+          </div>
+          <span className="text-xs font-mono font-semibold text-[#6D5970] bg-[#FFF0F6] px-2.5 py-1 rounded-full border border-[#FFB8D2]">
+            Matrix
+          </span>
+        </div>
+
+        {/* Slide Content */}
+        <div className="space-y-3 text-sm text-[#4A3B4E] leading-relaxed">
+          <p>
+            The four outcomes can be organized into a table called the <strong>confusion matrix</strong>.
+          </p>
+          <p>
+            A confusion matrix compares the actual classes with the classes predicted by a classification model.
+          </p>
+          <p className="font-bold text-[#1A1020]">
+            Consider the following example: A classifier examines 100 emails and produces these results:
+          </p>
+
+          <CompareTable
+            headers={['Actual \\ Predicted', 'Predicted Spam', 'Predicted Not Spam']}
+            rows={[
+              ['Actual Spam', '15 (TP)', '5 (FN)'],
+              ['Actual Not Spam', '10 (FP)', '70 (TN)'],
+            ]}
+          />
+          <p className="text-xs text-[#6D5970] italic">
+            Total observations: 100 emails (20 Actual Spam, 80 Actual Not Spam).
+          </p>
+        </div>
+
+        {/* Explanation */}
+        <Callout type="info" title="Explanation">
+          <div className="space-y-2 text-xs md:text-sm">
+            <p>
+              Out of the 20 actual spam emails, the model correctly identifies 15 and misses 5. Out of the 80 legitimate emails, the model correctly identifies 70 and incorrectly flags 10 as spam.
+            </p>
+            <p>
+              The confusion matrix gives us a detailed picture of the model&apos;s behavior. Instead of knowing only how many predictions were correct, we can understand exactly which types of mistakes the model makes.
+            </p>
+            <KeyInsight>
+              This information is essential when selecting an appropriate evaluation metric.
+            </KeyInsight>
+          </div>
+        </Callout>
+      </section>
+
+      {/* ─────────────────────────────────────────────────────────────
+          SLIDE 25 — Classification evaluation metrics
+         ───────────────────────────────────────────────────────────── */}
+      <section id="slide-25" className="space-y-5 rounded-2xl border-2 border-[#F0D6E2] bg-white p-6 shadow-xs">
+        <div className="flex items-center justify-between border-b border-[#F0D6E2] pb-3">
+          <div className="flex items-center gap-2.5">
+            <span className="font-pixel text-xs px-2.5 py-1 rounded-full bg-[#FFE4EF] text-[#F59E0B] font-bold border border-[#FFB8D2]">
+              SLIDE 25
+            </span>
+            <h2 className="text-xl md:text-2xl font-extrabold text-[#1A1020]">
+              Classification evaluation metrics
+            </h2>
+          </div>
+          <span className="text-xs font-mono font-semibold text-[#6D5970] bg-[#FFF0F6] px-2.5 py-1 rounded-full border border-[#FFB8D2]">
+            Metric Formulas
+          </span>
+        </div>
+
+        <p className="text-sm text-[#4A3B4E]">
+          Once we have the confusion matrix, we can calculate several measures of classification performance.
+        </p>
+
+        {/* 4 Metrics Detailed Breakdown with Boxed Answers */}
+        <div className="space-y-6">
+          {/* 1. Accuracy */}
+          <div className="p-4 rounded-xl border-2 border-[#FFD6E5] bg-[#FFF7FA] space-y-2">
+            <div className="flex items-center justify-between">
+              <h3 className="font-extrabold text-base text-[#96003B]">1. Accuracy</h3>
+              <span className="text-xs font-mono font-bold bg-[#FFE4EF] text-[#FF2E7E] px-2.5 py-0.5 rounded-full">
+                85%
+              </span>
+            </div>
+            <p className="text-xs text-[#4A3B4E]">
+              Accuracy measures the proportion of all predictions that are correct:
+            </p>
+            <MathBlock
+              formula="\text{Accuracy} = \frac{TP + TN}{TP + TN + FP + FN}"
+              label="Accuracy Formula"
+            />
+            <p className="text-xs text-[#4A3B4E]">Using our example:</p>
+            <MathBlock
+              formula="\text{Accuracy} = \frac{15 + 70}{100} = 0.85 \implies \boxed{\text{Accuracy} = 85\%}"
+            />
+            <p className="text-xs text-[#6D5970] italic">
+              The classifier correctly predicts 85% of all emails.
+            </p>
+          </div>
+
+          {/* 2. Precision */}
+          <div className="p-4 rounded-xl border-2 border-[#FFD6E5] bg-[#FFF7FA] space-y-2">
+            <div className="flex items-center justify-between">
+              <h3 className="font-extrabold text-base text-[#FF2E7E]">2. Precision</h3>
+              <span className="text-xs font-mono font-bold bg-[#FFE4EF] text-[#FF2E7E] px-2.5 py-0.5 rounded-full">
+                60%
+              </span>
+            </div>
+            <p className="text-xs text-[#4A3B4E]">
+              Precision measures the proportion of observations predicted as positive that are actually positive:
+            </p>
+            <MathBlock
+              formula="\text{Precision} = \frac{TP}{TP + FP}"
+              label="Precision Formula"
+            />
+            <p className="text-xs text-[#4A3B4E]">Using our example:</p>
+            <MathBlock
+              formula="\text{Precision} = \frac{15}{15 + 10} = \frac{15}{25} \implies \boxed{\text{Precision} = 60\%}"
+            />
+            <p className="text-xs text-[#6D5970] italic">
+              Among all emails classified as Spam, 60% are actually Spam.
+            </p>
+          </div>
+
+          {/* 3. Recall */}
+          <div className="p-4 rounded-xl border-2 border-[#FFD6E5] bg-[#FFF7FA] space-y-2">
+            <div className="flex items-center justify-between">
+              <h3 className="font-extrabold text-base text-[#8B5CF6]">3. Recall</h3>
+              <span className="text-xs font-mono font-bold bg-[#FFE4EF] text-[#8B5CF6] px-2.5 py-0.5 rounded-full">
+                75%
+              </span>
+            </div>
+            <p className="text-xs text-[#4A3B4E]">
+              Recall measures the proportion of actual positive observations that the classifier correctly identifies:
+            </p>
+            <MathBlock
+              formula="\text{Recall} = \frac{TP}{TP + FN}"
+              label="Recall Formula"
+            />
+            <p className="text-xs text-[#4A3B4E]">Using our example:</p>
+            <MathBlock
+              formula="\text{Recall} = \frac{15}{15 + 5} = \frac{15}{20} \implies \boxed{\text{Recall} = 75\%}"
+            />
+            <p className="text-xs text-[#6D5970] italic">
+              The classifier identifies 75% of all actual spam emails.
+            </p>
+          </div>
+
+          {/* 4. F1-score */}
+          <div className="p-4 rounded-xl border-2 border-[#FFD6E5] bg-[#FFF7FA] space-y-2">
+            <div className="flex items-center justify-between">
+              <h3 className="font-extrabold text-base text-[#10B981]">4. F1-score</h3>
+              <span className="text-xs font-mono font-bold bg-[#FFE4EF] text-[#10B981] px-2.5 py-0.5 rounded-full">
+                66.67%
+              </span>
+            </div>
+            <p className="text-xs text-[#4A3B4E]">
+              The F1-score is the harmonic mean of precision and recall:
+            </p>
+            <MathBlock
+              formula="F_1 = 2 \times \frac{\text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}}"
+              label="F1 Harmonic Mean Formula"
+            />
+            <p className="text-xs text-[#4A3B4E]">Using our example:</p>
+            <MathBlock
+              formula="F_1 = 2 \times \frac{0.60 \times 0.75}{0.60 + 0.75} = 2 \times \frac{0.45}{1.35} \implies \boxed{F_1 \approx 66.67\%}"
+            />
+            <p className="text-xs text-[#6D5970] italic">
+              The F1-score provides a combined measure of precision and recall.
+            </p>
+          </div>
+        </div>
+
+        {/* Live Interactive Confusion Matrix & Metrics Widget */}
+        <ConfusionMatrixLiveWidget />
+
+        {/* Explanation */}
+        <Callout type="info" title="Explanation">
+          <div className="space-y-2 text-xs md:text-sm">
+            <p>
+              These four metrics answer different questions:
+            </p>
+            <ul className="list-disc pl-5 space-y-1 text-xs">
+              <li><strong>Accuracy</strong> tells us how many predictions were correct overall.</li>
+              <li><strong>Precision</strong> tells us how reliable positive predictions are.</li>
+              <li><strong>Recall</strong> tells us how many actual positive observations we successfully identify.</li>
+              <li><strong>F1-score</strong> provides a balance between precision and recall.</li>
+            </ul>
+            <p>
+              The most appropriate metric depends on the application:
+            </p>
+            <ul className="list-disc pl-5 space-y-1 text-xs">
+              <li>For spam filtering, we may want to avoid incorrectly classifying legitimate emails as spam, making <strong>precision</strong> important.</li>
+              <li>For medical screening, missing a genuinely positive case may be particularly costly, making <strong>recall</strong> especially important.</li>
+            </ul>
+            <KeyInsight>
+              There is no universally best metric for every classification problem.
+            </KeyInsight>
+          </div>
+        </Callout>
+      </section>
+
+      {/* ─────────────────────────────────────────────────────────────
+          SLIDE 26 — Classification is not always perfect
+         ───────────────────────────────────────────────────────────── */}
+      <section id="slide-26" className="space-y-5 rounded-2xl border-2 border-[#F0D6E2] bg-white p-6 shadow-xs">
+        <div className="flex items-center justify-between border-b border-[#F0D6E2] pb-3">
+          <div className="flex items-center gap-2.5">
+            <span className="font-pixel text-xs px-2.5 py-1 rounded-full bg-[#FFE4EF] text-[#F59E0B] font-bold border border-[#FFB8D2]">
+              SLIDE 26
+            </span>
+            <h2 className="text-xl md:text-2xl font-extrabold text-[#1A1020]">
+              Classification is not always perfect
+            </h2>
+          </div>
+          <span className="text-xs font-mono font-semibold text-[#6D5970] bg-[#FFF0F6] px-2.5 py-1 rounded-full border border-[#FFB8D2]">
+            Data Drift
+          </span>
+        </div>
+
+        {/* Slide Content */}
+        <div className="space-y-3 text-sm text-[#4A3B4E] leading-relaxed">
+          <p>
+            It is important to understand that a classification model does not automatically produce correct predictions. Its performance depends on many factors, including:
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+            <div className="p-2.5 bg-white rounded-lg border border-[#F0D6E2]">The quality and quantity of training data</div>
+            <div className="p-2.5 bg-white rounded-lg border border-[#F0D6E2]">Whether training data represents real-world observations</div>
+            <div className="p-2.5 bg-white rounded-lg border border-[#F0D6E2]">The relevance of the selected features</div>
+            <div className="p-2.5 bg-white rounded-lg border border-[#F0D6E2]">The complexity of the relationship between features and classes</div>
+            <div className="p-2.5 bg-white rounded-lg border border-[#F0D6E2]">The learning algorithm and its hyperparameters</div>
+            <div className="p-2.5 bg-white rounded-lg border border-[#F0D6E2]">The presence of noise and ambiguous observations</div>
+          </div>
+
+          <div className="p-4 rounded-xl border border-[#FFB8D2] bg-[#FFF7FA] space-y-2">
+            <span className="font-pixel text-[10px] text-[#FF2E7E] uppercase font-bold block">
+              Real-World Practical Example: Concept & Distribution Drift
+            </span>
+            <p className="text-xs text-[#1A1020] leading-relaxed">
+              Suppose a spam detection model is trained using emails collected several years ago. Over time, spammers change their techniques and begin using different words, formats and links.
+            </p>
+            <p className="text-xs text-[#96003B] font-semibold">
+              The model may gradually become less effective because the new emails differ from the examples it learned from.
+            </p>
+          </div>
+        </div>
+
+        {/* Explanation */}
+        <Callout type="info" title="Explanation">
+          <div className="space-y-2 text-xs md:text-sm">
+            <p>
+              This illustrates an important practical issue: <strong>the data distribution can change over time</strong>.
+            </p>
+            <KeyInsight>
+              A classification system should therefore be <strong>evaluated and monitored</strong> continuously rather than assumed to remain accurate forever.
+            </KeyInsight>
+          </div>
+        </Callout>
+      </section>
     </div>
   );
 }
