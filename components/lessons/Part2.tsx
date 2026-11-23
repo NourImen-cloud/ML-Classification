@@ -13,6 +13,7 @@ import { DecisionBoundaryScatterPlot } from '@/components/interactive/Curriculum
 import ClassificationPlayground from '@/components/interactive/ClassificationPlayground';
 import { DecisionTreeExercise } from '@/components/interactive/DecisionTreeExercise';
 import { LogisticRegressionExercise } from '@/components/interactive/LogisticRegressionExercise';
+import { NaiveBayesExercise } from '@/components/interactive/NaiveBayesExercise';
 import {
   Sparkles,
   GitBranch,
@@ -691,6 +692,9 @@ export default function Part2() {
               </p>
             </div>
           </div>
+
+          {/* Practical Step-by-Step Exercise: Email Spam Filter */}
+          <NaiveBayesExercise />
         </div>
 
         {/* ─── ALGORITHM 5: SUPPORT VECTOR MACHINE (SVM) ─── */}
