@@ -615,12 +615,82 @@ export default function Part2() {
           />
         </div>
 
-        {/* ─── ALGORITHM 4: SUPPORT VECTOR MACHINE (SVM) ─── */}
+        {/* ─── ALGORITHM 4: NAIVE BAYES ─── */}
+        <div className="rounded-2xl border-2 border-[#FED7AA] bg-[#FFFDFE] p-5 space-y-4 shadow-sm">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center gap-2">
+              <span className="w-7 h-7 rounded-full bg-[#EA580C] text-white text-xs font-mono font-extrabold flex items-center justify-center">
+                4
+              </span>
+              <h3 className="font-extrabold text-lg text-[#1A1020]">Naive Bayes Classifier</h3>
+            </div>
+            <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-[#FFF7ED] text-[#C2410C] border border-[#FDBA74]">
+              Probabilistic · Bayes' Theorem
+            </span>
+          </div>
+
+          {/* Everyday Analogy */}
+          <div className="p-3.5 rounded-xl bg-[#FFF7ED] border border-[#FDBA74] space-y-1.5">
+            <div className="flex items-center gap-1.5 text-xs font-bold font-mono text-[#9A3412] uppercase tracking-wider">
+              <span>💡</span> Everyday Mental Model: The Clue Detective & Word Tally
+            </div>
+            <p className="text-xs text-[#2D1F33] leading-relaxed">
+              Imagine a postal inspector checking if a mystery letter is Spam or a Real Job Offer. The letter contains three clue words: <em>&ldquo;Urgent&rdquo;</em>, <em>&ldquo;Prize&rdquo;</em>, and <em>&ldquo;Winner&rdquo;</em>. The inspector checks history: <em>&ldquo;How often does &apos;Prize&apos; appear in Spam vs. Legitimate mail?&rdquo;</em> By multiplying the evidence from each clue with baseline spam rates, Bayes&apos; Theorem calculates the probability of each category!
+            </p>
+          </div>
+
+          {/* Why is it called "Naive"? */}
+          <div className="space-y-2">
+            <h4 className="font-bold text-xs uppercase tracking-wider text-[#6D5970] font-mono">
+              Why is it Called &ldquo;Naive&rdquo;? (The Core Assumption)
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+              <div className="p-3.5 rounded-xl border border-orange-200 bg-white space-y-1.5">
+                <span className="font-bold text-[#EA580C] block font-mono">The Conditional Independence Assumption</span>
+                <p className="text-[#4A3B4E] leading-relaxed">
+                  In real language, words depend on each other (e.g., &ldquo;credit&rdquo; and &ldquo;card&rdquo; usually appear together). Naive Bayes makes the &ldquo;naive&rdquo; assumption that <strong>every feature is conditionally independent of every other feature given the class</strong>.
+                </p>
+                <p className="text-[11px] text-[#6D5970]">
+                  Even though this assumption is technically violated in text, it works remarkably well in practice!
+                </p>
+              </div>
+
+              <div className="p-3.5 rounded-xl border border-orange-200 bg-white space-y-1.5">
+                <span className="font-bold text-[#EA580C] block font-mono">Bayes&apos; Theorem Formulation</span>
+                <p className="text-[#4A3B4E]">
+                  Computes posterior probability by multiplying individual feature likelihoods by the prior:
+                </p>
+                <MathBlock formula="P(y \mid x_1, \dots, x_d) \propto P(y) \prod_{j=1}^d P(x_j \mid y)" />
+                <p className="text-[11px] text-[#6D5970]">
+                  Predicts the class that maximizes this posterior product (Maximum A Posteriori / MAP).
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Superpower & Zero Frequency Trap */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+            <div className="p-3 rounded-xl border border-emerald-200 bg-emerald-50/50 space-y-1">
+              <span className="font-bold text-emerald-900 block font-mono">Superpower: Lightning Fast & High-Dimensional</span>
+              <p className="text-emerald-800 leading-relaxed">
+                Training requires just counting word frequencies! It was the historic backbone of early spam filters (e.g. SpamAssassin) and easily scales to vocabulary sizes of 50,000+ words with near-zero memory footprint.
+              </p>
+            </div>
+            <div className="p-3 rounded-xl border border-rose-200 bg-rose-50/50 space-y-1">
+              <span className="font-bold text-rose-900 block font-mono">The Zero-Frequency Trap & Laplace Smoothing</span>
+              <p className="text-rose-800 leading-relaxed">
+                If a test email contains a new word never seen during training, <MathInline formula="P(\text{word} \mid \text{Spam}) = 0" />, which zeroes out the whole product! <strong>Remedy:</strong> Add 1 to every count (<em>Laplace Smoothing</em>).
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* ─── ALGORITHM 5: SUPPORT VECTOR MACHINE (SVM) ─── */}
         <div className="rounded-2xl border-2 border-[#BFDBFE] bg-[#FFFDFE] p-5 space-y-4 shadow-sm">
           <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-2">
               <span className="w-7 h-7 rounded-full bg-[#3B82F6] text-white text-xs font-mono font-extrabold flex items-center justify-center">
-                4
+                5
               </span>
               <h3 className="font-extrabold text-lg text-[#1A1020]">Support Vector Machine (SVM)</h3>
             </div>
@@ -733,11 +803,19 @@ export default function Part2() {
                 'Cannot capture non-linear patterns natively',
               ],
               [
-                'Support Vector Machine',
+                'Naive Bayes',
+                'Clue detective & word tally',
+                'Smooth probabilistic surface / linear',
+                'No (Frequency counts)',
+                'Ultra-fast training; handles 50,000+ text features easily',
+                'Assumes independence; zero-frequency problem without Laplace smoothing',
+              ],
+              [
+                'Support Vector Machine (SVM)',
                 'Widest safety highway',
                 'Max-margin hyperplane or curved kernel',
                 'Yes (Essential)',
-                'Robust against outliers outside margin',
+                'Robust against outliers outside margin; powerful in high dimensions',
                 'Slower training on huge data; hard to interpret',
               ],
             ]}
@@ -785,11 +863,20 @@ export default function Part2() {
             </div>
 
             <div className="p-3 rounded-xl bg-white border border-[#FFD6E5] space-y-1">
-              <span className="font-bold text-[#3B82F6] block">Q4: The Feature Scale Test</span>
+              <span className="font-bold text-[#EA580C] block">Q4: The &ldquo;Naive&rdquo; Assumption & Laplace Smoothing</span>
               <p className="text-[#4A3B4E]">
-                <em>&ldquo;If we multiply the Links feature by 1,000, which algorithm changes: KNN or Decision Tree?&rdquo;</em>
+                <em>&ldquo;Why is Naive Bayes called &apos;naive&apos;, and why must we add +1 to word counts?&rdquo;</em>
                 <br />
-                <span className="text-[#6D5970] text-[11px]">→ KNN drastically changes (distance calculation is hijacked). The Decision Tree doesn&apos;t change at all because ordering remains identical!</span>
+                <span className="text-[#6D5970] text-[11px]">→ It naively assumes all words are independent (ignoring grammar). If a test email has a new word never seen before, its count is 0, which multiplies and zeroes out the entire spam score! Laplace smoothing (+1) prevents this zero-frequency collapse.</span>
+              </p>
+            </div>
+
+            <div className="p-3 rounded-xl bg-white border border-[#FFD6E5] space-y-1 md:col-span-2">
+              <span className="font-bold text-[#3B82F6] block">Q5: The Feature Scale Test</span>
+              <p className="text-[#4A3B4E]">
+                <em>&ldquo;If we multiply the Links feature by 1,000, which algorithms break and which don&apos;t care?&rdquo;</em>
+                <br />
+                <span className="text-[#6D5970] text-[11px]">→ KNN and SVM break drastically (distances/margins are hijacked). Decision Trees and Naive Bayes don&apos;t care at all because tree splits only check value ordering and Naive Bayes checks category counts!</span>
               </p>
             </div>
           </div>

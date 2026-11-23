@@ -1585,6 +1585,78 @@
 
 
       <!-- ========================================================
+           SLIDE 13B: Naive Bayes Classifier
+           ======================================================== -->
+      <section class="slide" id="slide-13b">
+        <svg class="topo-lines"><use href="#topo-paths"/></svg>
+        <div class="hanging-header-container">
+          <div class="hanging-ropes"><div class="rope"></div><div class="rope"></div></div>
+          <div class="wood-plank">
+            <div class="wood-grain"></div>
+            <div class="plank-washer left"></div><div class="plank-washer right"></div>
+            NAIVE BAYES CLASSIFIER
+          </div>
+        </div>
+
+        <div class="slide-body">
+          <div class="content-area">
+            <p class="lead-text" style="font-size: 26px; color: #F5C26B; margin-bottom: 14px;">
+              💡 <em>"The Clue Detective & Word Tally"</em> (Multiplying individual evidence clues like 'urgent' and 'prize' to compute spam probabilities)
+            </p>
+
+            <div class="cards-grid-2">
+              <div>
+                <h3 style="font-size: 30px; color: var(--accent-gold); font-family: 'Oswald', sans-serif; margin-bottom: 12px;">
+                  BAYES' THEOREM IN ACTION
+                </h3>
+                <div class="trail-card" style="padding: 16px;">
+                  <p style="font-size: 20px; line-height: 1.45;">
+                    Calculates the probability of class $y$ given observed feature evidence $x$:
+                  </p>
+                  <div style="font-size: 26px; color: #FFA080; margin: 10px 0;">
+                    $$P(y \mid x) = \frac{P(x \mid y) \cdot P(y)}{P(x)}$$
+                  </div>
+                  <p style="font-size: 19px; line-height: 1.4; color: #E5D5C3;">
+                    • <strong>Prior $P(y)$:</strong> Historical rate of spam (e.g. 20%).<br>
+                    • <strong>Likelihood $P(x \mid y)$:</strong> How frequently clues appear in spam.<br>
+                    • <strong>Posterior $P(y \mid x)$:</strong> Final updated belief after seeing the email.
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <div class="trail-card highlight" style="padding: 16px;">
+                  <h4 style="font-size: 24px; margin-bottom: 8px;">WHY IS IT CALLED "NAIVE"?</h4>
+                  <p style="font-size: 20px; line-height: 1.45;">
+                    It makes the bold simplifying assumption that <strong>all words are conditionally independent</strong> given the class:
+                  </p>
+                  <div style="font-size: 22px; color: var(--accent-gold); margin: 8px 0;">
+                    $$P(x_1, \dots, x_d \mid y) = \prod_{j=1}^d P(x_j \mid y)$$
+                  </div>
+                  <p style="font-size: 18px; line-height: 1.35;">
+                    Even though words like "credit" and "card" appear together in real language, assuming independence makes training almost instantaneous!
+                  </p>
+                </div>
+
+                <div class="trail-card" style="margin-top: 14px; padding: 14px; border-color: rgba(245, 194, 107, 0.4);">
+                  <h4 style="font-size: 20px; margin-bottom: 6px; color: #F5C26B;">⚠️ LAPLACE SMOOTHING (ZERO-FREQUENCY CURE)</h4>
+                  <p style="font-size: 18px; line-height: 1.35;">
+                    If a test word was never seen during training, its likelihood is $0$, which zeroes out the entire product! Add $+1$ to every word count so no probability is ever zero.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bottom-trail-icons">
+          <svg class="campfire-icon"><use href="#icon-campfire"/></svg>
+          <svg class="brain-icon"><use href="#icon-brain"/></svg>
+        </div>
+      </section>
+
+
+      <!-- ========================================================
            SLIDE 14: Algorithm Showdown (Matches PDF Page 14)
            ======================================================== -->
       <section class="slide" id="slide-14">
@@ -1616,6 +1688,9 @@
 
               <div class="trail-table-cell-left">Logistic Regression</div>
               <div class="trail-table-cell-right"><strong>Calibrated risk dial.</strong> Flat straight hyperplane. Fast inference, calibrated probabilities. Cannot learn non-linear boundaries natively.</div>
+
+              <div class="trail-table-cell-left">Naive Bayes</div>
+              <div class="trail-table-cell-right"><strong>Clue detective & word tally.</strong> Probabilistic surface. Assumes conditional feature independence. Ultra-fast training on high-dimensional text. Use Laplace smoothing (+1) for zero counts.</div>
 
               <div class="trail-table-cell-left">Support Vector Machine (SVM)</div>
               <div class="trail-table-cell-right"><strong>Widest safety highway.</strong> Maximum separation margin. Border points are Support Vectors. Kernel trick lifts 2D non-linear points into 3D space.</div>
