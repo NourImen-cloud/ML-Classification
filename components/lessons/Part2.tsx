@@ -12,6 +12,7 @@ import { ExternalImageCard } from '@/components/ui/ExternalImageCard';
 import { DecisionBoundaryScatterPlot } from '@/components/interactive/CurriculumVisuals';
 import ClassificationPlayground from '@/components/interactive/ClassificationPlayground';
 import { DecisionTreeExercise } from '@/components/interactive/DecisionTreeExercise';
+import { LogisticRegressionExercise } from '@/components/interactive/LogisticRegressionExercise';
 import {
   Sparkles,
   GitBranch,
@@ -593,6 +594,9 @@ export default function Part2() {
               The model regresses log-odds continuously, and turns into a classifier by applying a cutoff threshold: <MathInline formula="\hat{y} = 1 \text{ if } P \ge 0.5" />.
             </p>
           </div>
+
+          {/* Practical Step-by-Step Exercise: Exam Success Predictor */}
+          <LogisticRegressionExercise />
 
           {/* Geometry & Limitation */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
