@@ -306,8 +306,12 @@ export function ModelPipelineVisual() {
           <span className="font-pixel text-[10px] text-[#FF2E7E] uppercase tracking-wider font-bold">
             Interactive Visual · Slide 3
           </span>
-          <h4 className="font-extrabold text-[#1A1020] text-base">
-            Model Inference Flow: Observation $\rightarrow$ Feature Vector $\rightarrow$ Prediction
+          <h4 className="font-extrabold text-[#1A1020] text-base flex flex-wrap items-center gap-1.5">
+            <span>Model Inference Flow: Observation</span>
+            <span className="text-[#FF2E7E] font-bold">→</span>
+            <span>Feature Vector</span>
+            <span className="text-[#FF2E7E] font-bold">→</span>
+            <span>Prediction</span>
           </h4>
         </div>
         <div className="flex items-center gap-1">
@@ -328,38 +332,50 @@ export function ModelPipelineVisual() {
       </div>
 
       {/* Flow Diagram */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-center text-center">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-2 text-center">
         {/* Step 1: Input Observation */}
-        <div className="p-4 rounded-xl border-2 border-purple-200 bg-purple-50/50 flex flex-col items-center">
+        <div className="flex-1 w-full p-4 rounded-xl border-2 border-purple-200 bg-purple-50/50 flex flex-col items-center">
           <Mail className="w-6 h-6 text-purple-600 mb-2" />
           <span className="text-[10px] font-mono uppercase text-purple-700 font-bold">1. Raw Observation</span>
           <p className="text-xs font-bold text-[#1A1020] mt-1 line-clamp-2">&quot;{current.subject}&quot;</p>
         </div>
 
+        <ArrowRight className="w-5 h-5 text-[#FF2E7E] shrink-0 rotate-90 md:rotate-0 my-1 md:my-0" />
+
         {/* Step 2: Feature Extraction */}
-        <div className="p-4 rounded-xl border-2 border-blue-200 bg-blue-50/50 flex flex-col items-center">
+        <div className="flex-1 w-full p-4 rounded-xl border-2 border-blue-200 bg-blue-50/50 flex flex-col items-center">
           <Sliders className="w-6 h-6 text-blue-600 mb-2" />
-          <span className="text-[10px] font-mono uppercase text-blue-700 font-bold">2. Feature Vector x</span>
+          <span className="text-[10px] font-mono uppercase text-blue-700 font-bold flex items-center gap-1">
+            2. Feature Vector <MathInline formula="\mathbf{x}" />
+          </span>
           <div className="font-mono text-xs bg-white px-3 py-1 rounded border border-blue-200 mt-1 font-bold text-blue-900">
-            x = [{current.links}, {current.words}]ᵀ
+            <MathInline formula={`\\mathbf{x} = [${current.links},\\, ${current.words}]^T`} />
           </div>
           <span className="text-[10px] text-gray-500 mt-1">links: {current.links}, words: {current.words}</span>
         </div>
 
+        <ArrowRight className="w-5 h-5 text-[#FF2E7E] shrink-0 rotate-90 md:rotate-0 my-1 md:my-0" />
+
         {/* Step 3: Learned Classifier */}
-        <div className={`p-4 rounded-xl border-2 border-[#FFB8D2] bg-[#FFF0F6] flex flex-col items-center transition-all ${isProcessing ? 'scale-105' : ''}`}>
+        <div className={`flex-1 w-full p-4 rounded-xl border-2 border-[#FFB8D2] bg-[#FFF0F6] flex flex-col items-center transition-all ${isProcessing ? 'scale-105' : ''}`}>
           <Brain className="w-6 h-6 text-[#FF2E7E] mb-2" />
           <span className="text-[10px] font-mono uppercase text-[#FF2E7E] font-bold">3. Learned Model</span>
           <div className="font-mono text-xs font-bold text-[#96003B] mt-1">
-            ŷ = f(x)
+            <MathInline formula="\hat{y} = f(\mathbf{x})" />
           </div>
-          <span className="text-[10px] text-[#6D5970] mt-1">Maps X $\rightarrow$ C</span>
+          <span className="text-[10px] text-[#6D5970] mt-1 flex items-center justify-center gap-1">
+            Maps <MathInline formula="X \rightarrow C" />
+          </span>
         </div>
 
+        <ArrowRight className="w-5 h-5 text-[#FF2E7E] shrink-0 rotate-90 md:rotate-0 my-1 md:my-0" />
+
         {/* Step 4: Predicted Class */}
-        <div className="p-4 rounded-xl border-2 border-emerald-200 bg-emerald-50/50 flex flex-col items-center">
+        <div className="flex-1 w-full p-4 rounded-xl border-2 border-emerald-200 bg-emerald-50/50 flex flex-col items-center">
           <CheckCircle2 className="w-6 h-6 text-emerald-600 mb-2" />
-          <span className="text-[10px] font-mono uppercase text-emerald-700 font-bold">4. Predicted Class ŷ</span>
+          <span className="text-[10px] font-mono uppercase text-emerald-700 font-bold flex items-center gap-1">
+            4. Predicted Class <MathInline formula="\hat{y}" />
+          </span>
           <div className={`mt-1 px-3 py-1 rounded-full text-white font-extrabold text-xs ${current.badgeColor}`}>
             {current.prediction}
           </div>

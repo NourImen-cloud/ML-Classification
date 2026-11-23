@@ -11,6 +11,7 @@ import { MathBlock, MathInline } from '@/components/ui/KatexFormula';
 import { ExternalImageCard } from '@/components/ui/ExternalImageCard';
 import { DecisionBoundaryScatterPlot } from '@/components/interactive/CurriculumVisuals';
 import ClassificationPlayground from '@/components/interactive/ClassificationPlayground';
+import { DecisionTreeExercise } from '@/components/interactive/DecisionTreeExercise';
 import {
   Sparkles,
   GitBranch,
@@ -496,6 +497,9 @@ export default function Part2() {
               At each step, the algorithm chooses the split that creates the <strong>largest reduction in Gini Impurity</strong> (Information Gain).
             </p>
           </div>
+
+          {/* Practical Step-by-Step Exercise: Building a Decision Tree from Scratch */}
+          <DecisionTreeExercise />
 
           {/* Geometry & Overfitting Warning */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
