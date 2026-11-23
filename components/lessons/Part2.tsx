@@ -823,64 +823,7 @@ export default function Part2() {
           />
         </div>
 
-        {/* Socratic Classroom Questions for Teachers */}
-        <div className="rounded-2xl border-2 border-[#FFB8D2] bg-[#FFF7FA] p-5 space-y-4 shadow-sm">
-          <div className="flex items-center gap-2">
-            <span className="font-pixel text-[11px] px-2.5 py-0.5 rounded-full bg-[#FF2E7E] text-white font-bold">
-              TEACHER SCRIPT
-            </span>
-            <span className="font-bold text-sm text-[#1A1020]">
-              Socratic Questions to Ask Your Students During Lecture
-            </span>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-            <div className="p-3 rounded-xl bg-white border border-[#FFD6E5] space-y-1">
-              <span className="font-bold text-[#FF2E7E] block">Q1: The Noise Point E10 Dilemma</span>
-              <p className="text-[#4A3B4E]">
-                <em>&ldquo;Look at noise point E10 (Links: 2, Words: 2). What does KNN predict when K=1 versus K=5?&rdquo;</em>
-                <br />
-                <span className="text-[#6D5970] text-[11px]">→ At K=1, it predicts Spam because it memorizes E10. At K=5, the 4 surrounding legitimate emails outvote it!</span>
-              </p>
-            </div>
-
-            <div className="p-3 rounded-xl bg-white border border-[#FFD6E5] space-y-1">
-              <span className="font-bold text-[#8B5CF6] block">Q2: The Diagonal Boundary Riddle</span>
-              <p className="text-[#4A3B4E]">
-                <em>&ldquo;Can a standard Decision Tree ever draw a smooth 45-degree diagonal line?&rdquo;</em>
-                <br />
-                <span className="text-[#6D5970] text-[11px]">→ No! Every tree split tests only one feature (<MathInline formula="x_i \ge c" />). It must stair-step horizontally and vertically.</span>
-              </p>
-            </div>
-
-            <div className="p-3 rounded-xl bg-white border border-[#FFD6E5] space-y-1">
-              <span className="font-bold text-[#10B981] block">Q3: Why Not Plain Linear Regression?</span>
-              <p className="text-[#4A3B4E]">
-                <em>&ldquo;Why can&apos;t we just use regular Linear Regression for spam classification?&rdquo;</em>
-                <br />
-                <span className="text-[#6D5970] text-[11px]">→ Linear regression outputs numbers like -3.5 or +14.2, which make no sense as probabilities! The Sigmoid function is required to bound scores between 0 and 1.</span>
-              </p>
-            </div>
-
-            <div className="p-3 rounded-xl bg-white border border-[#FFD6E5] space-y-1">
-              <span className="font-bold text-[#EA580C] block">Q4: The &ldquo;Naive&rdquo; Assumption & Laplace Smoothing</span>
-              <p className="text-[#4A3B4E]">
-                <em>&ldquo;Why is Naive Bayes called &apos;naive&apos;, and why must we add +1 to word counts?&rdquo;</em>
-                <br />
-                <span className="text-[#6D5970] text-[11px]">→ It naively assumes all words are independent (ignoring grammar). If a test email has a new word never seen before, its count is 0, which multiplies and zeroes out the entire spam score! Laplace smoothing (+1) prevents this zero-frequency collapse.</span>
-              </p>
-            </div>
-
-            <div className="p-3 rounded-xl bg-white border border-[#FFD6E5] space-y-1 md:col-span-2">
-              <span className="font-bold text-[#3B82F6] block">Q5: The Feature Scale Test</span>
-              <p className="text-[#4A3B4E]">
-                <em>&ldquo;If we multiply the Links feature by 1,000, which algorithms break and which don&apos;t care?&rdquo;</em>
-                <br />
-                <span className="text-[#6D5970] text-[11px]">→ KNN and SVM break drastically (distances/margins are hijacked). Decision Trees and Naive Bayes don&apos;t care at all because tree splits only check value ordering and Naive Bayes checks category counts!</span>
-              </p>
-            </div>
-          </div>
-        </div>
 
         {/* Final Insight Callout */}
         <Callout type="tip" title="Rule of Thumb for Model Selection">
