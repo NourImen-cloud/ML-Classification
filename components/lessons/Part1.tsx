@@ -120,9 +120,7 @@ export default function Part1() {
           </span>
         </div>
 
-        <p className="text-xs text-[#6D5970] italic">
-          Before defining classification, students need to understand the broader concept of Machine Learning.
-        </p>
+       
 
         {/* Slide Content */}
         <div className="space-y-3 text-sm text-[#4A3B4E] leading-relaxed">
