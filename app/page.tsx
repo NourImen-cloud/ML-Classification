@@ -190,34 +190,7 @@ export default function HomePage() {
             <PixelMascot />
           </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-            <Link
-              href="/slides"
-              className="px-6 py-2.5 text-xs md:text-sm font-bold flex items-center gap-2 rounded-xl bg-[#16322C] text-[#FFF4EB] border-2 border-[#E85D36] hover:bg-[#E85D36] transition-all shadow-md hover:scale-105"
-            >
-              <span>Slides</span>
-              <span>→</span>
-            </Link>
-            <Link
-              href="/lesson/1"
-              className="btn-pink px-6 py-2.5 text-xs md:text-sm font-bold flex items-center gap-2 shadow-sm"
-            >
-              <span>Start Interactive Lesson</span>
-              <span>→</span>
-            </Link>
-            <Link
-              href="#slides"
-              className="btn-white px-5 py-2.5 text-xs md:text-sm font-bold flex items-center gap-2"
-            >
-              <span>Browse All 29 Slides</span>
-            </Link>
-            <Link
-              href="/playground"
-              className="btn-white px-5 py-2.5 text-xs md:text-sm font-bold flex items-center gap-2"
-            >
-              <span>Interactive Playground</span>
-            </Link>
-          </div>
+
         </div>
       </section>
 
